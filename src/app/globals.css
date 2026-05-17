@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-ivory text-gray-800 font-sans antialiased;
+  }
+
+  h1, h2, h3 {
+    @apply font-serif;
+  }
+
+  * {
+    @apply scroll-smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-maroon-500 hover:bg-maroon-600 text-white font-semibold text-sm rounded transition-all;
+  }
+  .btn-secondary {
+    @apply px-6 py-3 border border-maroon-500 text-maroon-500 hover:bg-maroon-50 font-semibold text-sm rounded transition-all;
+  }
+  .btn-gold {
+    @apply px-6 py-3 bg-gold-500 hover:bg-gold-600 text-white font-semibold text-sm rounded transition-all;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 border border-gold-200 rounded-lg text-sm outline-none focus:border-maroon-400 focus:ring-1 focus:ring-maroon-200 bg-white transition-all;
+  }
+  .section-label {
+    @apply text-gold-600 text-sm tracking-widest uppercase mb-2;
+  }
+  .section-title {
+    @apply font-serif text-3xl sm:text-4xl font-bold text-maroon-500;
+  }
+}
