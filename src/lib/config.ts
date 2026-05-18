@@ -75,6 +75,14 @@ export const BUSINESS = {
 export const fullAddress = `${BUSINESS.addressLine1}, ${BUSINESS.city}, ${BUSINESS.state} ${BUSINESS.zip}, ${BUSINESS.country}`
 export const whatsappBaseUrl = `https://wa.me/${BUSINESS.whatsappNumber}`
 
+/** Returns true if the store is currently open (Tue–Sun, 12:00 noon – 7:30 pm Central Time). */
+export function isStoreOpen(): boolean {
+  const central = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }))
+  const day = central.getDay() // 0=Sun,1=Mon,2=Tue…6=Sat
+  const minutes = central.getHours() * 60 + central.getMinutes()
+  return day !== 1 && minutes >= 720 && minutes < 1170 // not Monday, 12:00–19:30
+}
+
 /** Returns the shipping cost for a given US state name, or null if state not yet selected. */
 export function getShippingForState(state: string): { cost: number; label: string } | null {
   if (!state) return null

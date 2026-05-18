@@ -63,9 +63,9 @@ export default function AppointmentPage() {
       <div className="min-h-screen bg-ivory flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <CheckCircle size={56} className="text-green-500 mx-auto mb-4" />
-          <h1 className="font-serif text-2xl font-bold text-gray-800 mb-2">Request Sent!</h1>
+          <h1 className="font-serif text-2xl font-bold text-gray-800 mb-2">Request Received!</h1>
           <p className="text-gray-500 text-sm mb-6">
-            Your appointment request has been sent via WhatsApp. We&apos;ll confirm your slot within a few hours during store hours (Tue–Sun, 12–7:30 pm).
+            Your appointment request has been sent via WhatsApp. We&apos;ll review and confirm your slot — please wait for our approval message before visiting the store.
           </p>
           <Link href="/" className="inline-block px-6 py-3 bg-maroon-500 text-white rounded-lg text-sm font-semibold hover:bg-maroon-600 transition-colors">
             Back to Home
@@ -215,7 +215,7 @@ export default function AppointmentPage() {
                 <MessageCircle size={16} /> Confirm via WhatsApp
               </button>
             </div>
-            <p className="text-xs text-gray-400 text-center">Your request will be sent via WhatsApp. We confirm within a few hours.</p>
+            <p className="text-xs text-gray-400 text-center">Your request will be sent via WhatsApp. Appointments are subject to approval — we&apos;ll confirm within a few hours.</p>
           </div>
         )}
       </div>

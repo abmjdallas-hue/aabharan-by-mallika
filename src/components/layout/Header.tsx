@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext'
 import { Search, Heart, ShoppingBag, User, Menu, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react'
 import SearchModal from '@/components/ui/SearchModal'
 import MobileMenu from './MobileMenu'
+import { isStoreOpen } from '@/lib/config'
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -38,6 +39,13 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [storeOpen, setStoreOpen] = useState(false)
+
+  useEffect(() => {
+    setStoreOpen(isStoreOpen())
+    const interval = setInterval(() => setStoreOpen(isStoreOpen()), 60_000)
+    return () => clearInterval(interval)
+  }, [])
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   // Close user menu on outside click
@@ -50,6 +58,8 @@ export default function Header() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  const visibleLinks = navLinks.filter(l => l.label !== 'Book Appointment' || storeOpen)
 
   return (
     <>
@@ -85,7 +95,7 @@ export default function Header() {
                   <LayoutDashboard size={14} /> Admin
                 </Link>
               )}
-              {navLinks.map((link) => (
+              {visibleLinks.map((link) => (
                 <div
                   key={link.label}
                   className="relative group"
@@ -227,7 +237,7 @@ export default function Header() {
       </header>
 
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-      <MobileMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)} links={navLinks} />
+      <MobileMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)} links={visibleLinks} />
     </>
   )
 }
