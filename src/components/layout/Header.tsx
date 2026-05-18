@@ -27,6 +27,7 @@ const navLinks = [
   },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
+  { label: 'Book Appointment', href: '/appointment' },
 ]
 
 export default function Header() {
@@ -93,7 +94,10 @@ export default function Header() {
                 >
                   <Link
                     href={link.href}
-                    className="text-sm font-medium text-gray-700 hover:text-maroon-500 transition-colors py-2 flex items-center gap-1"
+                    className={link.label === 'Book Appointment'
+                      ? "text-xs font-semibold px-3 py-1.5 bg-maroon-500 hover:bg-maroon-600 text-white rounded-full transition-colors flex items-center gap-1"
+                      : "text-sm font-medium text-gray-700 hover:text-maroon-500 transition-colors py-2 flex items-center gap-1"
+                    }
                   >
                     {link.label}
                     {link.children && <span className="text-xs">▾</span>}

@@ -43,14 +43,26 @@ export default function ProductCard({ product }: Props) {
     <>
       <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
         <Link href={`/product/${product.slug}`} className="block">
-          {/* Image */}
+          {/* Image — primary + hover second image */}
           <div className="relative aspect-square overflow-hidden bg-gray-50">
             <Image
               src={product.image}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className={`object-cover transition-all duration-500 ${
+                product.gallery?.[1]
+                  ? 'group-hover:opacity-0 group-hover:scale-105'
+                  : 'group-hover:scale-105'
+              }`}
             />
+            {product.gallery?.[1] && (
+              <Image
+                src={product.gallery[1]}
+                alt={`${product.name} — alternate view`}
+                fill
+                className="object-cover transition-all duration-500 opacity-0 group-hover:opacity-100 scale-105 group-hover:scale-100"
+              />
+            )}
             {/* Badges */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
               {discount > 0 && (

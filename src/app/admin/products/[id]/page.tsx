@@ -242,6 +242,12 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Main Image URL *</label>
               <input type="url" required value={form.image} onChange={(e) => set('image', e.target.value)} className="input-field" />
+              {form.image && (
+                <div className="mt-3 w-32 h-32 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={form.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Gallery URLs (one per line)</label>

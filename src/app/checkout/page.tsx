@@ -206,6 +206,13 @@ export default function CheckoutPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [insureOrder, declaredValue])
 
+  // ── Totals ───────────────────────────────────────────────────────────────
+  const shippingCost = deliveryMethod === 'pickup' ? 0 : (selectedRate?.price ?? null)
+  const tax = Math.round(subtotal * BUSINESS.taxRate * 100) / 100
+  const grandTotal = shippingCost !== null
+    ? Math.round((subtotal + shippingCost + insuranceCost + tax) * 100) / 100
+    : null
+
   // Create PaymentIntent when card is selected and total is known
   useEffect(() => {
     if (paymentMethod !== 'card' || !stripePromise) { setClientSecret(null); return }
@@ -226,13 +233,6 @@ export default function CheckoutPage() {
       .catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentMethod, grandTotal])
-
-  // ── Totals ───────────────────────────────────────────────────────────────
-  const shippingCost = deliveryMethod === 'pickup' ? 0 : (selectedRate?.price ?? null)
-  const tax = Math.round(subtotal * BUSINESS.taxRate * 100) / 100
-  const grandTotal = shippingCost !== null
-    ? Math.round((subtotal + shippingCost + insuranceCost + tax) * 100) / 100
-    : null
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   const setShip = (k: keyof ShipAddress, v: string) => setShipAddr(a => ({ ...a, [k]: v }))
