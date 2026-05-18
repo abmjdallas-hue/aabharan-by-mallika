@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const users = getUsers()
       const found = users.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password)
       if (!found) return { error: 'Invalid email or password.' }
-      const { password: _, ...u } = found
+      const { password: _pw1, ...u } = found
       setUser(u)
       localStorage.setItem(SESSION_KEY, JSON.stringify(u))
       return {}
@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: 'An account with this email already exists.' }
       const newUser: StoredUser = { id: `user-${Date.now()}`, email, name, password, isAdmin: false }
       saveUsers([...users, newUser])
-      const { password: _, ...u } = newUser
+      const { password: _pw2, ...u } = newUser
       setUser(u)
       localStorage.setItem(SESSION_KEY, JSON.stringify(u))
       return {}

@@ -444,7 +444,7 @@ export default function CheckoutPage() {
               ) : (
                 <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
                   <h2 className="font-serif text-lg font-bold text-gray-800">Your Contact Details</h2>
-                  <p className="text-xs text-gray-400">We'll confirm your pickup appointment via WhatsApp or email.</p>
+                  <p className="text-xs text-gray-400">We&apos;ll confirm your pickup appointment via WhatsApp or email.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1.5">Full Name *</label>
