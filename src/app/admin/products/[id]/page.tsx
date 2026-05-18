@@ -13,7 +13,7 @@ const CATEGORIES: Category[] = [
 ]
 
 const COLLECTIONS: Collection[] = [
-  'Antique Jewellery', 'Diamond Jewellery', 'Gold Jewellery',
+  'Antique Jewellery', 'Diamond Jewellery', 'Gold Jewellery', 'Silver Jewellery',
   'Temple Jewellery', 'Bridal Collection', 'Lightweight Jewellery', 'Festive Collection',
 ]
 

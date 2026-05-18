@@ -42,6 +42,7 @@ export type Collection =
   | 'Antique Jewellery'
   | 'Diamond Jewellery'
   | 'Gold Jewellery'
+  | 'Silver Jewellery'
   | 'Temple Jewellery'
   | 'Bridal Collection'
   | 'Lightweight Jewellery'
