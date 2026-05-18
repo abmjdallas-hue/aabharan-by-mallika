@@ -3,7 +3,17 @@ import Link from 'next/link'
 import { ShieldCheck, Award, Heart, Users } from 'lucide-react'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'About Us' }
+export const metadata: Metadata = {
+  title: 'About Us',
+  description:
+    'Learn about Aabharan by Mallika — a family-run Indian jewellery store in Frisco, TX specialising in BIS Hallmarked gold, diamond, silver and temple jewellery.',
+  alternates: { canonical: 'https://aabharanbymallikausa.com/about' },
+  openGraph: {
+    title: 'About Aabharan by Mallika',
+    description: 'Family-run Indian jewellery store in Frisco, TX. BIS Hallmarked gold, diamond, silver & temple jewellery.',
+    url: 'https://aabharanbymallikausa.com/about',
+  },
+}
 
 const values = [
   { icon: ShieldCheck, title: 'Certified Quality', desc: 'Every piece is BIS Hallmarked and certified for metal purity and gemstone authenticity.' },

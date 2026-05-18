@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Package, Tag, ShoppingCart, TrendingUp, PlusCircle, Store } from 'lucide-react'
+import { Package, Tag, ShoppingCart, TrendingUp, PlusCircle, Store, AlertCircle } from 'lucide-react'
 import { useProducts } from '@/context/ProductsContext'
 
 export default function AdminDashboard() {
@@ -12,6 +12,7 @@ export default function AdminDashboard() {
     { label: 'Featured Items', value: products.filter((p) => p.featured).length, icon: TrendingUp, color: 'bg-green-100 text-green-700' },
     { label: 'In Stock', value: products.filter((p) => p.stockStatus === 'in_stock').length, icon: Tag, color: 'bg-blue-100 text-blue-700' },
     { label: 'Limited Stock', value: products.filter((p) => p.stockStatus === 'limited').length, icon: ShoppingCart, color: 'bg-orange-100 text-orange-700' },
+    { label: 'Out of Stock', value: products.filter((p) => p.stockStatus === 'out_of_stock').length, icon: AlertCircle, color: 'bg-red-100 text-red-700' },
   ]
 
   return (
@@ -36,7 +37,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           {stats.map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
               <div className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center mb-3`}>

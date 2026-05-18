@@ -283,6 +283,12 @@ export default function NewProductPage() {
                 className="input-field" />
               {errors.image && <p className="text-xs text-red-500 mt-1">{errors.image}</p>}
               <p className="text-xs text-gray-400 mt-1">Use Cloudinary URL or put image in /public/images/ and use /images/filename.jpg</p>
+              {form.image && (
+                <div className="mt-3 w-32 h-32 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={form.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Additional Gallery URLs</label>
