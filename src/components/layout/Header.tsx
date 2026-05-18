@@ -9,6 +9,7 @@ import { Search, Heart, ShoppingBag, User, Menu, LogOut, LayoutDashboard, Chevro
 import SearchModal from '@/components/ui/SearchModal'
 import MobileMenu from './MobileMenu'
 import { isStoreOpen } from '@/lib/config'
+import { useStoreHours } from '@/hooks/useStoreHours'
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -40,12 +41,13 @@ export default function Header() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [storeOpen, setStoreOpen] = useState(false)
+  const { hours } = useStoreHours()
 
   useEffect(() => {
-    setStoreOpen(isStoreOpen())
-    const interval = setInterval(() => setStoreOpen(isStoreOpen()), 60_000)
+    setStoreOpen(isStoreOpen(hours))
+    const interval = setInterval(() => setStoreOpen(isStoreOpen(hours)), 60_000)
     return () => clearInterval(interval)
-  }, [])
+  }, [hours])
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   // Close user menu on outside click
