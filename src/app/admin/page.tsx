@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Package, Tag, ShoppingCart, TrendingUp, PlusCircle, Store, AlertCircle, Settings } from 'lucide-react'
+import { Package, Tag, ShoppingCart, TrendingUp, PlusCircle, Store, AlertCircle, Settings, ClipboardList } from 'lucide-react'
 import { useProducts } from '@/context/ProductsContext'
 
 export default function AdminDashboard() {
@@ -55,6 +55,7 @@ export default function AdminDashboard() {
             { label: 'Manage All Products', href: '/admin/products', desc: 'View, edit, or delete any jewellery listing', icon: Package },
             { label: 'Add New Product', href: '/admin/products/new', desc: 'List a new jewellery piece with price & weight', icon: PlusCircle },
             { label: 'Preview Store', href: '/', desc: 'See how customers see your live shop', icon: Store },
+            { label: 'View Orders', href: '/admin/orders', desc: 'Track all orders, FedEx labels and shipping status', icon: ClipboardList },
             { label: 'Store Settings', href: '/admin/settings', desc: 'Update store hours and appointment availability', icon: Settings },
           ].map((link) => (
             <Link key={link.label} href={link.href}

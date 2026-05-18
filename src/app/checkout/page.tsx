@@ -65,11 +65,15 @@ function StripePaymentSection({
   grandTotal,
   validate,
   getOrderData,
+  getSaveOrderPayload,
+  clientSecret,
   clearCart,
 }: {
   grandTotal: number
   validate: () => boolean
   getOrderData: (orderId: string) => object
+  getSaveOrderPayload: (paymentIntentId: string) => object
+  clientSecret: string
   clearCart: () => void
 }) {
   const stripe = useStripe()
@@ -82,13 +86,31 @@ function StripePaymentSection({
     if (!validate()) return
     setPaying(true)
     setStripeError(null)
-    const orderId = `ABM${Date.now()}`
+
+    // Extract PI id from clientSecret (format: pi_xxx_secret_xxx)
+    const paymentIntentId = clientSecret.split('_secret_')[0]
+
+    // Save order to DB and tag the PaymentIntent
+    let orderNumber = `ABM${Date.now()}`
+    try {
+      const res = await fetch('/api/save-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(getSaveOrderPayload(paymentIntentId)),
+      })
+      const data = await res.json()
+      if (data.orderNumber) orderNumber = data.orderNumber
+    } catch (err) {
+      console.error('[save-order]', err)
+    }
+
     clearCart()
-    localStorage.setItem('aabharan-last-order', JSON.stringify(getOrderData(orderId)))
+    localStorage.setItem('aabharan-last-order', JSON.stringify(getOrderData(orderNumber)))
+
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/order-success?id=${orderId}`,
+        return_url: `${window.location.origin}/order-success?id=${orderNumber}`,
       },
     })
     if (error) {
@@ -590,6 +612,26 @@ export default function CheckoutPage() {
                         grandTotal={grandTotal}
                         validate={validate}
                         getOrderData={getOrderData}
+                        clientSecret={clientSecret}
+                        getSaveOrderPayload={(paymentIntentId) => ({
+                          paymentIntentId,
+                          customerEmail: shipAddr.email,
+                          customerName: shipAddr.name,
+                          phone: shipAddr.phone,
+                          deliveryMethod,
+                          shippingAddress: deliveryMethod === 'ship' ? {
+                            address: shipAddr.address,
+                            city: shipAddr.city,
+                            state: shipAddr.state,
+                            zip: shipAddr.zip,
+                          } : null,
+                          items: items.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price })),
+                          subtotal,
+                          shippingCost: shippingCost ?? 0,
+                          tax,
+                          total: grandTotal,
+                          selectedService: selectedRate?.service ?? 'FEDEX_GROUND',
+                        })}
                         clearCart={clearCart}
                       />
                     </Elements>

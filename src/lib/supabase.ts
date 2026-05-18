@@ -9,6 +9,12 @@ export const supabase = createClient(
   key || 'placeholder-key'
 )
 
+// Server-side admin client — bypasses RLS, only used in API routes / webhooks
+export const supabaseAdmin = createClient(
+  url || 'https://placeholder.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || key || 'placeholder-key'
+)
+
 // True only when real Supabase credentials are present
 export const isSupabaseConfigured =
   url.startsWith('https://') && key.length > 20
