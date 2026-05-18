@@ -32,7 +32,7 @@ export default function ProductCard({ product }: Props) {
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault()
-    inWishlist ? removeFromWishlist(product.id) : addToWishlist(product)
+    if (inWishlist) { removeFromWishlist(product.id) } else { addToWishlist(product) }
   }
 
   const discount = product.originalPrice

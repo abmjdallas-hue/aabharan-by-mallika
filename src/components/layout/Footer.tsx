@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Instagram, Facebook, Youtube, MapPin, Phone, Mail } from 'lucide-react'
-import { BUSINESS, fullAddress, whatsappBaseUrl } from '@/lib/config'
+import { BUSINESS, fullAddress } from '@/lib/config'
 
 export default function Footer() {
   return (

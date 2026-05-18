@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Calendar, Clock, MapPin, MessageCircle, CheckCircle, ChevronRight } from 'lucide-react'
-import { BUSINESS, whatsappBaseUrl } from '@/lib/config'
+import { whatsappBaseUrl } from '@/lib/config'
 
 const APPOINTMENT_TYPES = [
   { id: 'bridal', label: 'Bridal Consultation', duration: '60 min', desc: 'Full bridal set selection with styling advice' },
