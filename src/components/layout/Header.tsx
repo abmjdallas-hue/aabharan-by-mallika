@@ -21,7 +21,6 @@ const navLinks = [
       { label: 'Antique Jewellery', href: '/shop?collection=Antique+Jewellery' },
       { label: 'Diamond Jewellery', href: '/shop?collection=Diamond+Jewellery' },
       { label: 'Gold Jewellery', href: '/shop?collection=Gold+Jewellery' },
-      { label: 'Silver Jewellery', href: '/shop?collection=Silver+Jewellery' },
       { label: 'Temple Jewellery', href: '/shop?collection=Temple+Jewellery' },
       { label: 'Bridal Collection', href: '/shop?collection=Bridal+Collection' },
       { label: 'Lightweight Jewellery', href: '/shop?collection=Lightweight+Jewellery' },

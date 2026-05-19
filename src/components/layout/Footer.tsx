@@ -39,7 +39,6 @@ export default function Footer() {
                 { label: 'Home', href: '/' },
                 { label: 'Shop All', href: '/shop' },
                 { label: 'Bridal Collection', href: '/shop?collection=Bridal+Collection' },
-                { label: 'Silver Jewellery', href: '/shop?collection=Silver+Jewellery' },
                 { label: 'New Arrivals', href: '/shop' },
                 { label: 'About Us', href: '/about' },
                 { label: 'Contact', href: '/contact' },
