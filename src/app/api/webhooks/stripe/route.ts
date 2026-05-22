@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createFedExShipment } from '@/lib/fedex-ship'
-import { sendOrderConfirmationEmail } from '@/lib/email'
+import { sendOrderConfirmationEmail, sendOwnerNotificationEmail } from '@/lib/email'
+import { BUSINESS } from '@/lib/config'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '')
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? ''
@@ -78,22 +79,39 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Send confirmation email
+  const emailParams = {
+    orderNumber,
+    customerName: order.customer_name,
+    items: order.items,
+    subtotal: order.subtotal,
+    shippingCost: order.shipping_cost,
+    tax: order.tax,
+    total: order.total,
+    deliveryMethod: order.delivery_method,
+    trackingNumber,
+  }
+
+  // Send customer confirmation email
   try {
-    await sendOrderConfirmationEmail({
-      to: order.customer_email,
-      customerName: order.customer_name,
-      orderNumber,
-      items: order.items,
-      subtotal: order.subtotal,
-      shippingCost: order.shipping_cost,
-      tax: order.tax,
-      total: order.total,
-      trackingNumber,
-      deliveryMethod: order.delivery_method,
+    await sendOrderConfirmationEmail({ to: order.customer_email, ...emailParams })
+  } catch (err) {
+    console.error('[customer email]', err)
+  }
+
+  // Send owner notification with FedEx label if ship order
+  try {
+    await sendOwnerNotificationEmail({
+      ownerEmail: BUSINESS.email,
+      customerEmail: order.customer_email,
+      customerPhone: order.phone ?? '',
+      paymentType: 'card',
+      shippingAddress: order.shipping_address,
+      selectedService: order.selected_service,
+      labelUrl: order.fedex_label_url ?? undefined,
+      ...emailParams,
     })
   } catch (err) {
-    console.error('[Email]', err)
+    console.error('[owner email]', err)
   }
 
   return NextResponse.json({ received: true })

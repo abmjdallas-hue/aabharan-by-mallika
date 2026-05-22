@@ -10,7 +10,7 @@ import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import ProductCard from '@/components/shop/ProductCard'
 import { isBuyable, getWhatsAppUrl } from '@/lib/whatsapp'
-import { BUYABLE_CATEGORIES } from '@/types'
+import { BUYABLE_CATEGORIES, Product } from '@/types'
 
 function ProductFAQ({ isBuyable, isNoExchange }: { isBuyable: boolean; isNoExchange: boolean }) {
   const [open, setOpen] = useState<number | null>(null)
@@ -63,12 +63,30 @@ function ProductFAQ({ isBuyable, isNoExchange }: { isBuyable: boolean; isNoExcha
   )
 }
 
+// ── Thin wrapper: only calls useProducts before conditional returns ────────────
 export default function ProductPageClient({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
-  const { products, getProduct } = useProducts()
+  const { getProduct, loading } = useProducts()
   const product = getProduct(slug)
+
+  if (!product && loading) {
+    return (
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 border-4 border-gold-300 border-t-maroon-500 rounded-full animate-spin mx-auto" />
+          <p className="text-gray-400 text-sm">Loading product…</p>
+        </div>
+      </div>
+    )
+  }
   if (!product) notFound()
 
+  return <ProductDisplay product={product!} />
+}
+
+// ── Inner component: all hooks called unconditionally ─────────────────────────
+function ProductDisplay({ product }: { product: Product }) {
+  const { products } = useProducts()
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const inWishlist = isInWishlist(product.id)

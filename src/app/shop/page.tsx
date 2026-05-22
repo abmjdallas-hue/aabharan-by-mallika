@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { FilterState, Product } from '@/types'
 import ProductCard from '@/components/shop/ProductCard'
 import ProductFilters from '@/components/shop/ProductFilters'
-import { SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontal, Search, X } from 'lucide-react'
 import { useProducts } from '@/context/ProductsContext'
 
 const DEFAULT_FILTERS: FilterState = {
@@ -66,7 +66,7 @@ function ShopContent() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-6 gap-4">
+        <div className="flex flex-wrap items-center gap-3 mb-6">
           <button
             onClick={() => setMobileFiltersOpen(true)}
             className="lg:hidden flex items-center gap-2 px-4 py-2 border border-gold-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gold-50 transition-colors relative"
@@ -79,6 +79,26 @@ function ShopContent() {
               </span>
             )}
           </button>
+
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search jewellery…"
+              value={filters.search}
+              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+              className="w-full pl-9 pr-8 py-2 border border-gold-200 rounded-lg text-sm outline-none focus:border-maroon-400 bg-white"
+            />
+            {filters.search && (
+              <button
+                onClick={() => setFilters((f) => ({ ...f, search: '' }))}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-3 ml-auto">
             <label className="text-sm text-gray-600 hidden sm:block">Sort by:</label>

@@ -25,6 +25,7 @@ const navLinks = [
       { label: 'Bridal Collection', href: '/shop?collection=Bridal+Collection' },
       { label: 'Lightweight Jewellery', href: '/shop?collection=Lightweight+Jewellery' },
       { label: 'Festive Collection', href: '/shop?collection=Festive+Collection' },
+      { label: 'Silver Articles', href: '/shop?category=Silver+Articles' },
     ],
   },
   { label: 'About', href: '/about' },

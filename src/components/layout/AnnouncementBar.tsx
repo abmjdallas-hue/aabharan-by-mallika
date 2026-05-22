@@ -1,14 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, TrendingUp } from 'lucide-react'
-
-interface GoldRate {
-  pricePerGram22KT: number
-  pricePerGram24KT: number
-  updatedAt: string
-  isFallback?: boolean
-}
+import { X } from 'lucide-react'
 
 const MESSAGES = [
   'Free in-store pickup · Frisco, TX · Tue–Sun 12–7:30 pm',
@@ -19,24 +12,11 @@ const MESSAGES = [
 
 export default function AnnouncementBar() {
   const [visible, setVisible] = useState(true)
-  const [goldRate, setGoldRate] = useState<GoldRate | null>(null)
   const [msgIndex, setMsgIndex] = useState(0)
-  const [showGold, setShowGold] = useState(true)
 
-  useEffect(() => {
-    fetch('/api/gold-rate')
-      .then((r) => r.json())
-      .then(setGoldRate)
-      .catch(() => {})
-  }, [])
-
-  // Rotate between gold rate and info messages every 4 seconds
   useEffect(() => {
     const timer = setInterval(() => {
-      setShowGold((prev) => {
-        if (!prev) setMsgIndex((i) => (i + 1) % MESSAGES.length)
-        return !prev
-      })
+      setMsgIndex((i) => (i + 1) % MESSAGES.length)
     }, 4000)
     return () => clearInterval(timer)
   }, [])
@@ -44,27 +24,9 @@ export default function AnnouncementBar() {
   if (!visible) return null
 
   return (
-    <div className="bg-maroon-500 text-white text-xs sm:text-sm py-2 px-4 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-center min-h-[20px]">
-        {showGold ? (
-          <span className="flex items-center gap-2 transition-all">
-            <TrendingUp size={13} className="text-gold-300 shrink-0" />
-            <span>
-              Live Gold Rate —{' '}
-              <strong className="text-gold-200">
-                22KT ${goldRate ? goldRate.pricePerGram22KT.toFixed(2) : '…'}/g
-              </strong>
-              {goldRate && (
-                <span className="text-white/60 ml-1.5 text-[10px]">
-                  · 24KT ${goldRate.pricePerGram24KT.toFixed(2)}/g
-                  {goldRate.isFallback ? ' (est.)' : ''}
-                </span>
-              )}
-            </span>
-          </span>
-        ) : (
-          <span className="transition-all">{MESSAGES[msgIndex]}</span>
-        )}
+    <div className="bg-maroon-500 text-white text-xs sm:text-sm py-2 px-4 relative">
+      <div className="max-w-7xl mx-auto flex items-center justify-center text-center min-h-[20px]">
+        <span>{MESSAGES[msgIndex]}</span>
       </div>
       <button
         onClick={() => setVisible(false)}

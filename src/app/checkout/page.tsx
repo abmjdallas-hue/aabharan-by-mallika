@@ -171,8 +171,8 @@ export default function CheckoutPage() {
   const [declaredValue, setDeclaredValue] = useState(subtotal)
   const insuranceCost = insureOrder ? calcInsurance(declaredValue) : 0
 
-  // Payment
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod' | 'card'>('upi')
+  // Payment — ship defaults to card; pickup defaults to upi (Zelle)
+  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod' | 'card'>('card')
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -297,11 +297,39 @@ export default function CheckoutPage() {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
-    await new Promise(r => setTimeout(r, 1500))
-    const orderId = `ABM${Date.now()}`
-    localStorage.setItem('aabharan-last-order', JSON.stringify(getOrderData(orderId)))
+
+    const fallbackId = `ABM${Date.now()}`
+    let finalId = fallbackId
+
+    try {
+      const res = await fetch('/api/save-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentIntentId: null,
+          paymentType: paymentMethod,
+          customerEmail: contact.email,
+          customerName: contact.name,
+          phone: contact.phone,
+          deliveryMethod,
+          shippingAddress: null,
+          items: items.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price })),
+          subtotal,
+          shippingCost: 0,
+          tax,
+          total: grandTotal ?? subtotal + tax,
+          selectedService: 'PICKUP',
+        }),
+      })
+      const data = await res.json()
+      if (data.orderNumber) finalId = data.orderNumber
+    } catch (err) {
+      console.error('[save-order]', err)
+    }
+
+    localStorage.setItem('aabharan-last-order', JSON.stringify(getOrderData(finalId)))
     clearCart()
-    router.push(`/order-success?id=${orderId}`)
+    router.push(`/order-success?id=${finalId}`)
   }
 
   if (items.length === 0) {
@@ -339,7 +367,7 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label className={`flex gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deliveryMethod === 'ship' ? 'border-maroon-400 bg-maroon-50' : 'border-gray-100 hover:border-gold-200'}`}>
                     <input type="radio" name="delivery" value="ship" checked={deliveryMethod === 'ship'}
-                      onChange={() => { setDeliveryMethod('ship'); setRates([]); setSelectedRate(null); if (paymentMethod === 'cod') setPaymentMethod('upi') }}
+                      onChange={() => { setDeliveryMethod('ship'); setRates([]); setSelectedRate(null); setPaymentMethod('card') }}
                       className="mt-1 text-maroon-500 shrink-0" />
                     <div>
                       <div className="flex items-center gap-1.5 mb-0.5">
@@ -351,7 +379,7 @@ export default function CheckoutPage() {
                   </label>
                   <label className={`flex gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deliveryMethod === 'pickup' ? 'border-maroon-400 bg-maroon-50' : 'border-gray-100 hover:border-gold-200'}`}>
                     <input type="radio" name="delivery" value="pickup" checked={deliveryMethod === 'pickup'}
-                      onChange={() => setDeliveryMethod('pickup')}
+                      onChange={() => { setDeliveryMethod('pickup'); setPaymentMethod('upi') }}
                       className="mt-1 text-maroon-500 shrink-0" />
                     <div>
                       <div className="flex items-center gap-1.5 mb-0.5">
@@ -546,14 +574,13 @@ export default function CheckoutPage() {
               <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h2 className="font-serif text-lg font-bold text-gray-800 mb-5">Payment Method</h2>
                 <div className="space-y-3">
-                  {[
-                    { id: 'upi', label: 'Zelle / Digital Wallet', desc: 'Zelle, Venmo, PayPal, Cash App' },
-                    ...(deliveryMethod === 'pickup'
-                      ? [{ id: 'cod', label: 'Pay at Pickup', desc: 'Cash or card when you collect in-store' }]
-                      : []
-                    ),
-                    { id: 'card', label: 'Credit / Debit Card (coming soon)', desc: 'Visa, Mastercard, Amex — secured by Stripe' },
-                  ].map(opt => (
+                  {(deliveryMethod === 'ship'
+                    ? [{ id: 'card', label: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex — secured by Stripe' }]
+                    : [
+                        { id: 'upi', label: 'Zelle / Digital Wallet', desc: 'Zelle, Venmo, PayPal, Cash App' },
+                        { id: 'cod', label: 'Pay at Pickup', desc: 'Cash or card when you collect in-store' },
+                      ]
+                  ).map(opt => (
                     <label key={opt.id}
                       className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${paymentMethod === opt.id ? 'border-maroon-400 bg-maroon-50' : 'border-gray-100 hover:border-gold-200'}`}>
                       <input type="radio" name="payment" value={opt.id} checked={paymentMethod === opt.id}
@@ -615,6 +642,7 @@ export default function CheckoutPage() {
                         clientSecret={clientSecret}
                         getSaveOrderPayload={(paymentIntentId) => ({
                           paymentIntentId,
+                          paymentType: 'card',
                           customerEmail: shipAddr.email,
                           customerName: shipAddr.name,
                           phone: shipAddr.phone,

@@ -69,7 +69,7 @@ function productToRow(p: Omit<Product, 'id'> & { id?: string }) {
 
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(staticProducts)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(isSupabaseConfigured)
   const [localLoaded, setLocalLoaded] = useState(false)
 
   useEffect(() => {
