@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Store, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { collections } from '@/data/products'
+import { compressImage } from '@/lib/compress-image'
 
 interface CollectionImage {
   name: string
@@ -34,8 +35,9 @@ export default function AdminCollectionsPage() {
     setSaved(null)
 
     try {
+      const compressed = await compressImage(file)
       const form = new FormData()
-      form.append('file', file)
+      form.append('file', compressed)
       const uploadRes = await fetch('/api/admin/upload-image', { method: 'POST', body: form })
       const uploadData = await uploadRes.json()
       if (!uploadRes.ok || !uploadData.imageUrl) throw new Error(uploadData.error ?? 'Upload failed')
