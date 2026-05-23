@@ -1,11 +1,45 @@
 'use client'
 
 import Link from 'next/link'
-import { Package, Tag, ShoppingCart, TrendingUp, PlusCircle, Store, AlertCircle, Settings, ClipboardList } from 'lucide-react'
+import { Package, Tag, ShoppingCart, TrendingUp, PlusCircle, Store, AlertCircle, Settings, ClipboardList, Database, ChevronDown, ChevronUp, ExternalLink, CheckCircle2 } from 'lucide-react'
 import { useProducts } from '@/context/ProductsContext'
+import { useState } from 'react'
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+const projectRef = SUPABASE_URL.match(/https:\/\/([^.]+)\.supabase/)?.[1] ?? 'your-project'
+
+const SETUP_STEPS = [
+  {
+    title: 'Open Supabase Storage',
+    detail: 'Go to your Supabase project → Storage (left sidebar)',
+    link: `https://supabase.com/dashboard/project/${projectRef}/storage/buckets`,
+    linkLabel: 'Open Storage →',
+  },
+  {
+    title: 'Create the bucket',
+    detail: 'Click "New bucket", name it exactly: product-images',
+  },
+  {
+    title: 'Make it public',
+    detail: 'Toggle "Public bucket" ON before clicking Save. This lets product images load on the store.',
+  },
+  {
+    title: 'Add an upload policy',
+    detail: 'After creating the bucket, click it → Policies → "New policy" → select "Full access" for the service role, or use the SQL below.',
+    code: `-- Run in Supabase SQL Editor
+insert into storage.policies (name, bucket_id, operation, definition)
+values ('Admin upload', 'product-images', 'INSERT', 'true');`,
+  },
+]
 
 export default function AdminDashboard() {
   const { products } = useProducts()
+  const [setupOpen, setSetupOpen] = useState(false)
+  const [checkedSteps, setCheckedSteps] = useState<number[]>([])
+
+  const toggleStep = (i: number) =>
+    setCheckedSteps((prev) => prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i])
+  const allDone = checkedSteps.length === SETUP_STEPS.length
 
   const stats = [
     { label: 'Total Products', value: products.length, icon: Package, color: 'bg-gold-100 text-gold-700' },
@@ -47,6 +81,83 @@ export default function AdminDashboard() {
               <div className="text-sm text-gray-500 mt-0.5">{stat.label}</div>
             </div>
           ))}
+        </div>
+
+        {/* Supabase Storage Setup */}
+        <div className={`mb-8 rounded-xl border shadow-sm overflow-hidden ${allDone ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'}`}>
+          <button
+            onClick={() => setSetupOpen((o) => !o)}
+            className="w-full flex items-center gap-3 px-5 py-4 text-left"
+          >
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${allDone ? 'bg-green-500' : 'bg-blue-500'}`}>
+              {allDone ? <CheckCircle2 size={18} className="text-white" /> : <Database size={18} className="text-white" />}
+            </div>
+            <div className="flex-1">
+              <p className={`text-sm font-semibold ${allDone ? 'text-green-800' : 'text-blue-800'}`}>
+                {allDone ? 'Supabase Storage — all steps done!' : 'Setup required: Supabase image storage'}
+              </p>
+              <p className={`text-xs mt-0.5 ${allDone ? 'text-green-600' : 'text-blue-600'}`}>
+                {allDone
+                  ? 'Your product-images bucket is configured. Image uploads will work.'
+                  : 'Complete these steps once to enable Instagram import & file uploads.'}
+              </p>
+            </div>
+            {setupOpen ? <ChevronUp size={16} className="text-blue-400 shrink-0" /> : <ChevronDown size={16} className="text-blue-400 shrink-0" />}
+          </button>
+
+          {setupOpen && (
+            <div className="px-5 pb-5 space-y-4 border-t border-blue-200">
+              <p className="text-xs text-blue-700 pt-4">
+                The Instagram importer and Upload tab store images in a Supabase Storage bucket called <code className="bg-blue-100 px-1 rounded font-mono">product-images</code>.
+                The bucket is created automatically on first upload, but you need to make it <strong>public</strong> in advance so images display on the store.
+              </p>
+
+              <ol className="space-y-3">
+                {SETUP_STEPS.map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleStep(i)}
+                      className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        checkedSteps.includes(i)
+                          ? 'bg-green-500 border-green-500'
+                          : 'border-blue-300 bg-white hover:border-blue-500'
+                      }`}
+                    >
+                      {checkedSteps.includes(i) && <CheckCircle2 size={12} className="text-white" />}
+                    </button>
+                    <div className="flex-1">
+                      <p className={`text-sm font-semibold ${checkedSteps.includes(i) ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                        Step {i + 1}: {step.title}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">{step.detail}</p>
+                      {'link' in step && (
+                        <a
+                          href={step.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"
+                        >
+                          {step.linkLabel} <ExternalLink size={10} />
+                        </a>
+                      )}
+                      {'code' in step && (
+                        <pre className="mt-2 bg-gray-900 text-green-300 text-[10px] p-3 rounded-lg overflow-x-auto leading-relaxed">
+                          {step.code}
+                        </pre>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+
+              <div className="pt-2 border-t border-blue-200">
+                <p className="text-xs text-blue-600">
+                  Once done, the bucket is ready. No code changes needed — image uploads go live immediately.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quick Links */}
