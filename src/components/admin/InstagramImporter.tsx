@@ -113,7 +113,7 @@ export default function InstagramImporter({ onUseAsMain, onAddToGallery }: Props
       {/* Instagram tab */}
       {tab === 'instagram' && (
         <div className="space-y-2">
-          <p className="text-xs text-gray-500">Paste any Instagram post link — we'll pull the image automatically.</p>
+          <p className="text-xs text-gray-500">Paste any Instagram post link — we&apos;ll pull the image automatically.</p>
           <div className="flex gap-2">
             <input
               type="url"
