@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Store, Package, ExternalLink, RefreshCw } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 
@@ -47,18 +46,20 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false })
-    setOrders(data ?? [])
+    const res = await fetch('/api/admin/orders')
+    const data = await res.json()
+    setOrders(Array.isArray(data) ? data : [])
     setLoading(false)
   }
 
   useEffect(() => { fetchOrders() }, [])
 
   const markShipped = async (orderNumber: string) => {
-    await supabase.from('orders').update({ status: 'shipped' }).eq('order_number', orderNumber)
+    await fetch('/api/admin/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderNumber, status: 'shipped' }),
+    })
     fetchOrders()
   }
 
