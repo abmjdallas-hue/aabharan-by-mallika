@@ -45,23 +45,31 @@ export default function ProductCard({ product }: Props) {
         <Link href={`/product/${product.slug}`} className="block">
           {/* Image — primary + hover second image */}
           <div className="relative aspect-square overflow-hidden bg-gray-50">
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className={`object-cover transition-all duration-500 ${
-                product.gallery?.[1]
-                  ? 'group-hover:opacity-0 group-hover:scale-105'
-                  : 'group-hover:scale-105'
-              }`}
-            />
-            {product.gallery?.[1] && (
-              <Image
-                src={product.gallery[1]}
-                alt={`${product.name} — alternate view`}
-                fill
-                className="object-cover transition-all duration-500 opacity-0 group-hover:opacity-100 scale-105 group-hover:scale-100"
-              />
+            {product.image ? (
+              <>
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  className={`object-cover transition-all duration-500 ${
+                    product.gallery?.[1]
+                      ? 'group-hover:opacity-0 group-hover:scale-105'
+                      : 'group-hover:scale-105'
+                  }`}
+                />
+                {product.gallery?.[1] && (
+                  <Image
+                    src={product.gallery[1]}
+                    alt={`${product.name} — alternate view`}
+                    fill
+                    className="object-cover transition-all duration-500 opacity-0 group-hover:opacity-100 scale-105 group-hover:scale-100"
+                  />
+                )}
+              </>
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-maroon-800 to-maroon-500 flex items-center justify-center">
+                <span className="text-white/20 font-serif text-5xl select-none">◆</span>
+              </div>
             )}
             {/* Badges */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">

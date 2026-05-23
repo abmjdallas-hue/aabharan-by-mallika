@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { ShieldCheck, Award, Heart, Users } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -26,13 +25,20 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-ivory">
       {/* Hero */}
-      <section className="relative h-64 sm:h-80 overflow-hidden">
-        <Image src="https://images.unsplash.com/photo-1573408301185-9519f94815b0?w=1200&q=80" alt="About Aabharan" fill className="object-cover object-center" />
-        <div className="absolute inset-0 bg-black/55 flex items-center justify-center text-center px-4">
-          <div>
-            <p className="text-gold-300 text-xs tracking-widest uppercase mb-3">Our Story</p>
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white">About Aabharan by Mallika</h1>
-          </div>
+      <section
+        className="relative h-64 sm:h-80 overflow-hidden flex items-center justify-center text-center px-4"
+        style={{ background: 'linear-gradient(135deg, #450a0a 0%, #7c2d12 55%, #92400e 100%)' }}
+      >
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(246,201,14,0.5) 1px, transparent 0)',
+            backgroundSize: '36px 36px',
+          }}
+        />
+        <div className="relative z-10">
+          <p className="text-gold-300 text-xs tracking-widest uppercase mb-3">Our Story</p>
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white">About Aabharan by Mallika</h1>
         </div>
       </section>
 
@@ -54,8 +60,27 @@ export default function AboutPage() {
               </p>
             </div>
           </div>
-          <div className="relative h-72 sm:h-96 rounded-2xl overflow-hidden">
-            <Image src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&q=80" alt="Our jewellery" fill className="object-cover" />
+          {/* Decorative brand panel instead of stock image */}
+          <div
+            className="relative h-72 sm:h-96 rounded-2xl overflow-hidden flex flex-col items-center justify-center gap-4"
+            style={{ background: 'linear-gradient(135deg, #450a0a 0%, #7c2d12 60%, #92400e 100%)' }}
+          >
+            <div
+              className="absolute inset-0 opacity-10"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(246,201,14,0.5) 1px, transparent 0)',
+                backgroundSize: '28px 28px',
+              }}
+            />
+            <div className="relative z-10 flex flex-col items-center gap-3 text-center px-6">
+              <div className="w-20 h-20 rounded-full border-2 border-gold-400/50 flex items-center justify-center">
+                <span className="font-serif text-3xl text-gold-300">ᳩ</span>
+              </div>
+              <span className="font-serif text-3xl font-bold text-white tracking-wide">Aabharan</span>
+              <span className="text-gold-300 text-sm tracking-[0.3em] font-light">by Mallika</span>
+              <div className="h-px w-16 bg-gold-400/50 mt-1" />
+              <p className="text-maroon-200 text-xs tracking-widest uppercase mt-1">Est. Frisco, TX</p>
+            </div>
           </div>
         </div>
       </section>

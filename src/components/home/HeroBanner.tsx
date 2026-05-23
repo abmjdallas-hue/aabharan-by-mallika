@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 
 const slides = [
   {
@@ -12,8 +11,7 @@ const slides = [
     description: 'Exquisite bridal sets crafted for the modern Indian bride. BIS Hallmarked & certified.',
     cta: 'Explore Bridal',
     href: '/shop?collection=Bridal+Collection',
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1200&q=80',
-    overlay: 'from-black/70 via-black/30 to-transparent',
+    gradient: 'linear-gradient(135deg, #450a0a 0%, #7c2d12 55%, #92400e 100%)',
   },
   {
     id: 2,
@@ -22,8 +20,7 @@ const slides = [
     description: 'Hand-crafted temple jewellery inspired by centuries of South Indian artistry.',
     cta: 'Shop Temple Collection',
     href: '/shop?collection=Temple+Jewellery',
-    image: 'https://images.unsplash.com/photo-1573408301185-9519f94815b0?w=1200&q=80',
-    overlay: 'from-black/60 via-black/20 to-transparent',
+    gradient: 'linear-gradient(135deg, #3b0764 0%, #581c87 50%, #7c3aed 100%)',
   },
   {
     id: 3,
@@ -32,8 +29,7 @@ const slides = [
     description: 'IGI certified diamond jewellery in 18KT gold settings. Every diamond tells a story.',
     cta: 'Shop Diamond',
     href: '/shop?collection=Diamond+Jewellery',
-    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&q=80',
-    overlay: 'from-black/60 via-black/20 to-transparent',
+    gradient: 'linear-gradient(135deg, #0c1445 0%, #1e3a8a 55%, #1d4ed8 100%)',
   },
 ]
 
@@ -48,20 +44,29 @@ export default function HeroBanner() {
   const slide = slides[current]
 
   return (
-    <section className="relative h-[70vh] sm:h-[80vh] lg:h-screen max-h-[800px] overflow-hidden bg-gray-900">
+    <section className="relative h-[70vh] sm:h-[80vh] lg:h-screen max-h-[800px] overflow-hidden">
       {slides.map((s, i) => (
         <div
           key={s.id}
           className={`absolute inset-0 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
+          style={{ background: s.gradient }}
         >
-          <Image
-            src={s.image}
-            alt={s.title}
-            fill
-            priority={i === 0}
-            className="object-cover object-center"
+          {/* Subtle dot-grid texture */}
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(246,201,14,0.5) 1px, transparent 0)',
+              backgroundSize: '40px 40px',
+            }}
           />
-          <div className={`absolute inset-0 bg-gradient-to-r ${s.overlay}`} />
+          {/* Decorative gold circle */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full border border-gold-400/20 opacity-30" />
+          <div className="absolute right-8 top-1/2 -translate-y-1/2 w-[45vw] h-[45vw] max-w-[450px] max-h-[450px] rounded-full border border-gold-400/15 opacity-20" />
+          {/* Brand mark */}
+          <div className="absolute right-12 lg:right-24 top-1/2 -translate-y-1/2 hidden sm:flex flex-col items-center justify-center w-48 h-48 lg:w-64 lg:h-64 rounded-full border-2 border-gold-400/30">
+            <span className="font-serif text-3xl lg:text-4xl font-bold text-gold-300/60 tracking-wide">ᳩ</span>
+            <span className="font-serif text-base lg:text-lg text-gold-300/50 tracking-widest mt-1">Aabharan</span>
+          </div>
         </div>
       ))}
 
@@ -101,7 +106,7 @@ export default function HeroBanner() {
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`w-2.5 h-2.5 rounded-full transition-all ${i === current ? 'bg-gold-400 w-6' : 'bg-white/50'}`}
+            className={`h-2.5 rounded-full transition-all ${i === current ? 'bg-gold-400 w-6' : 'bg-white/50 w-2.5'}`}
             aria-label={`Slide ${i + 1}`}
           />
         ))}
