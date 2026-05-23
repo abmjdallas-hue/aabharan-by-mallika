@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronLeft, Save, CheckCircle } from 'lucide-react'
 import { useProducts } from '@/context/ProductsContext'
 import { Category, Collection, SilverSubcategory, SILVER_SUBCATEGORIES } from '@/types'
+import InstagramImporter from '@/components/admin/InstagramImporter'
 
 const CATEGORIES: Category[] = [
   'Necklaces', 'Haram', 'Earrings', 'Bangles', 'Rings',
@@ -239,9 +240,17 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           {/* Images */}
           <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
             <h2 className="font-semibold text-gray-800 border-b border-gray-100 pb-2">Images</h2>
+
+            <InstagramImporter
+              onUseAsMain={(url) => set('image', url)}
+              onAddToGallery={(url) => set('gallery', form.gallery ? form.gallery + '\n' + url : url)}
+            />
+
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Main Image URL *</label>
-              <input type="url" required value={form.image} onChange={(e) => set('image', e.target.value)} className="input-field" />
+              <input type="url" required value={form.image} onChange={(e) => set('image', e.target.value)}
+                placeholder="Paste a URL or use the importer above"
+                className="input-field" />
               {form.image && (
                 <div className="mt-3 w-32 h-32 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
