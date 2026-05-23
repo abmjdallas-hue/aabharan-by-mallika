@@ -575,7 +575,7 @@ export default function CheckoutPage() {
                 <h2 className="font-serif text-lg font-bold text-gray-800 mb-5">Payment Method</h2>
                 <div className="space-y-3">
                   {(deliveryMethod === 'ship'
-                    ? [{ id: 'card', label: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex — secured by Stripe' },]
+                    ? [{ id: 'card', label: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex · Affirm installments available on orders $50+' },]
                     : [
                         { id: 'upi', label: 'Zelle / Digital Wallet', desc: 'Zelle, Venmo, PayPal, Cash App' },
                         { id: 'cod', label: 'Pay at Pickup', desc: 'Cash or card when you collect in-store' },

@@ -19,15 +19,16 @@ export async function POST(req: NextRequest) {
 
   const { amountCents, shipping } = body
 
-  if (!amountCents || amountCents < 5000) {
-    return NextResponse.json({ error: 'Minimum $50 required for card / Affirm payments' }, { status: 400 })
+  if (!amountCents || amountCents < 50) {
+    return NextResponse.json({ error: 'Amount too low' }, { status: 400 })
   }
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: 'usd',
-      payment_method_types: ['card', 'affirm'],
+      // Affirm requires minimum $50 — include it only when eligible
+      payment_method_types: amountCents >= 5000 ? ['card', 'affirm'] : ['card'],
       ...(shipping?.name ? {
         shipping: {
           name: shipping.name,
