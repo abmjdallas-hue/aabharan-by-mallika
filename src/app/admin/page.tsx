@@ -168,6 +168,7 @@ export default function AdminDashboard() {
             { label: 'Preview Store', href: '/', desc: 'See how customers see your live shop', icon: Store },
             { label: 'View Orders', href: '/admin/orders', desc: 'Track all orders, FedEx labels and shipping status', icon: ClipboardList },
             { label: 'Category Images', href: '/admin/categories', desc: 'Upload photos for each jewellery category', icon: LayoutGrid },
+            { label: 'Collection Images', href: '/admin/collections', desc: 'Upload banner photos for each collection', icon: LayoutGrid },
             { label: 'Store Settings', href: '/admin/settings', desc: 'Update store hours and appointment availability', icon: Settings },
           ].map((link) => (
             <Link key={link.label} href={link.href}
