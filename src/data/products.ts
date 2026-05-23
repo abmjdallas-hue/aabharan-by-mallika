@@ -449,18 +449,18 @@ export const products: Product[] = [
 ]
 
 export const categories = [
-  { name: 'Necklaces', count: 24 },
-  { name: 'Haram', count: 18 },
-  { name: 'Earrings', count: 32 },
-  { name: 'Bangles', count: 20 },
-  { name: 'Rings', count: 15 },
-  { name: 'Pendants', count: 28 },
-  { name: 'Maang Tikka', count: 10 },
-  { name: 'Vaddanam', count: 8 },
-  { name: 'Bridal Sets', count: 12 },
+  { name: 'Necklaces',       count: 24 },
+  { name: 'Haram',           count: 18 },
+  { name: 'Earrings',        count: 32 },
+  { name: 'Bangles',         count: 20 },
+  { name: 'Rings',           count: 15 },
+  { name: 'Pendants',        count: 28 },
+  { name: 'Maang Tikka',     count: 10 },
+  { name: 'Vaddanam',        count: 8  },
+  { name: 'Bridal Sets',     count: 12 },
   { name: 'Silver Articles', count: 35 },
-  { name: 'Dori', count: 12 },
-  { name: 'Boxes', count: 8 },
+  { name: 'Dori',            count: 12 },
+  { name: 'Boxes',           count: 8  },
 ]
 
 export const collections = [
