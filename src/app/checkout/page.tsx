@@ -112,10 +112,13 @@ function StripePaymentSection({
       confirmParams: {
         return_url: `${window.location.origin}/order-success?id=${orderNumber}`,
       },
+      redirect: 'if_required',
     })
     if (error) {
       setStripeError(error.message ?? 'Payment failed. Please try again.')
       setPaying(false)
+    } else {
+      window.location.href = `/order-success?id=${orderNumber}`
     }
   }
 
