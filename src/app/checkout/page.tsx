@@ -139,7 +139,7 @@ function StripePaymentSection({
         }
       </button>
       <p className="text-xs text-center text-gray-400">
-        Credit / debit card &amp; Affirm installments · Secured by Stripe
+        Credit / debit card · Secured by Stripe
       </p>
     </div>
   )
@@ -238,7 +238,7 @@ export default function CheckoutPage() {
   // Create PaymentIntent when card is selected and total is known
   useEffect(() => {
     if (paymentMethod !== 'card' || !stripePromise) { setClientSecret(null); return }
-    if (grandTotal === null || grandTotal < 50) return
+    if (grandTotal === null || grandTotal < 1) return
     fetch('/api/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -575,7 +575,7 @@ export default function CheckoutPage() {
                 <h2 className="font-serif text-lg font-bold text-gray-800 mb-5">Payment Method</h2>
                 <div className="space-y-3">
                   {(deliveryMethod === 'ship'
-                    ? [{ id: 'card', label: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex — secured by Stripe' }]
+                    ? [{ id: 'card', label: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex — secured by Stripe' },]
                     : [
                         { id: 'upi', label: 'Zelle / Digital Wallet', desc: 'Zelle, Venmo, PayPal, Cash App' },
                         { id: 'cod', label: 'Pay at Pickup', desc: 'Cash or card when you collect in-store' },
@@ -621,10 +621,6 @@ export default function CheckoutPage() {
                   ) : grandTotal === null ? (
                     <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 text-xs text-center text-blue-600">
                       Enter your shipping ZIP above to calculate the total before paying.
-                    </div>
-                  ) : grandTotal < 50 ? (
-                    <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-100 text-xs text-center text-amber-700">
-                      Minimum $50 required for card / Affirm payments.
                     </div>
                   ) : !clientSecret ? (
                     <div className="mt-4 flex items-center justify-center gap-2 py-6 text-sm text-gray-400">
