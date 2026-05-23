@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
-  ShieldCheck, ChevronRight, Copy, CheckCircle2,
+  ShieldCheck, ChevronRight,
   Store, Truck, Loader2, AlertCircle, ShieldPlus,
 } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
@@ -41,23 +40,6 @@ const US_STATES = [
 ]
 
 // ── Sub-components ───────────────────────────────────────────────────────────
-
-function CopyField({ label, value }: { label: string; value: string }) {
-  const [copied, setCopied] = useState(false)
-  return (
-    <div className="flex items-center justify-between bg-white rounded-lg border border-blue-100 px-3 py-2">
-      <span className="text-xs text-gray-500 font-semibold">{label}:</span>
-      <span className="text-xs font-bold text-gray-800 mx-2 flex-1">{value}</span>
-      <button
-        type="button"
-        onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-        className="text-blue-500 hover:text-blue-700 transition-colors"
-      >
-        {copied ? <CheckCircle2 size={14} className="text-green-500" /> : <Copy size={14} />}
-      </button>
-    </div>
-  )
-}
 
 // ── Stripe payment section (must be inside <Elements> provider) ──────────────
 
@@ -152,7 +134,6 @@ function StripePaymentSection({
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart()
-  const router = useRouter()
 
   // Delivery & contact
   const [deliveryMethod, setDeliveryMethod] = useState<'ship' | 'pickup'>('ship')
@@ -174,10 +155,8 @@ export default function CheckoutPage() {
   const [declaredValue, setDeclaredValue] = useState(subtotal)
   const insuranceCost = insureOrder ? calcInsurance(declaredValue) : 0
 
-  // Payment — ship defaults to card; pickup defaults to upi (Zelle)
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod' | 'card'>('card')
+  const [paymentMethod] = useState<'card'>('card')
   const [clientSecret, setClientSecret] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // ── Fetch FedEx rates when ZIP changes ───────────────────────────────────
@@ -296,44 +275,6 @@ export default function CheckoutPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validate()) return
-    setLoading(true)
-
-    const fallbackId = `ABM${Date.now()}`
-    let finalId = fallbackId
-
-    try {
-      const res = await fetch('/api/save-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentIntentId: null,
-          paymentType: paymentMethod,
-          customerEmail: contact.email,
-          customerName: contact.name,
-          phone: contact.phone,
-          deliveryMethod,
-          shippingAddress: null,
-          items: items.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price })),
-          subtotal,
-          shippingCost: 0,
-          tax,
-          total: grandTotal ?? subtotal + tax,
-          selectedService: 'PICKUP',
-        }),
-      })
-      const data = await res.json()
-      if (data.orderNumber) finalId = data.orderNumber
-    } catch (err) {
-      console.error('[save-order]', err)
-    }
-
-    localStorage.setItem('aabharan-last-order', JSON.stringify(getOrderData(finalId)))
-    clearCart()
-    router.push(`/order-success?id=${finalId}`)
-  }
 
   if (items.length === 0) {
     return (
@@ -382,7 +323,7 @@ export default function CheckoutPage() {
                   </label>
                   <label className={`flex gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deliveryMethod === 'pickup' ? 'border-maroon-400 bg-maroon-50' : 'border-gray-100 hover:border-gold-200'}`}>
                     <input type="radio" name="delivery" value="pickup" checked={deliveryMethod === 'pickup'}
-                      onChange={() => { setDeliveryMethod('pickup'); setPaymentMethod('upi') }}
+                      onChange={() => { setDeliveryMethod('pickup') }}
                       className="mt-1 text-maroon-500 shrink-0" />
                     <div>
                       <div className="flex items-center gap-1.5 mb-0.5">
@@ -575,94 +516,53 @@ export default function CheckoutPage() {
 
               {/* Payment */}
               <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 className="font-serif text-lg font-bold text-gray-800 mb-5">Payment Method</h2>
-                <div className="space-y-3">
-                  {(deliveryMethod === 'ship'
-                    ? [{ id: 'card', label: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex · Affirm installments available on orders $50+' },]
-                    : [
-                        { id: 'upi', label: 'Zelle / Digital Wallet', desc: 'Zelle, Venmo, PayPal, Cash App' },
-                        { id: 'cod', label: 'Pay at Pickup', desc: 'Cash or card when you collect in-store' },
-                      ]
-                  ).map(opt => (
-                    <label key={opt.id}
-                      className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${paymentMethod === opt.id ? 'border-maroon-400 bg-maroon-50' : 'border-gray-100 hover:border-gold-200'}`}>
-                      <input type="radio" name="payment" value={opt.id} checked={paymentMethod === opt.id}
-                        onChange={() => setPaymentMethod(opt.id as typeof paymentMethod)} className="mt-0.5 text-maroon-500" />
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">{opt.label}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{opt.desc}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-
-                {paymentMethod === 'upi' && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-3">
-                    <p className="text-sm font-semibold text-gray-800">Send payment after placing your order:</p>
-                    <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
-                      <li>Click Place Order below</li>
-                      <li>Send the exact total to one of the options below</li>
-                      <li>Include your order number in the payment note</li>
-                      <li>We confirm and {deliveryMethod === 'pickup' ? 'prepare your order' : 'ship'} once received</li>
-                    </ol>
-                    <div className="space-y-2 pt-1">
-                      {BUSINESS.zellePhone && <CopyField label="Zelle" value={BUSINESS.zellePhone} />}
-                      {BUSINESS.zelleEmail && <CopyField label="Zelle email" value={BUSINESS.zelleEmail} />}
-                      {BUSINESS.venmoHandle && <CopyField label="Venmo" value={BUSINESS.venmoHandle} />}
-                      {BUSINESS.paypalEmail && <CopyField label="PayPal" value={BUSINESS.paypalEmail} />}
-                      {BUSINESS.cashappHandle && <CopyField label="Cash App" value={BUSINESS.cashappHandle} />}
-                    </div>
+                <h2 className="font-serif text-lg font-bold text-gray-800 mb-5">Payment</h2>
+                {!stripePromise ? (
+                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 text-xs text-center text-amber-700">
+                    <p className="font-medium">Card payments not yet configured</p>
+                    <p className="mt-1">Add your Stripe keys to .env.local to enable card &amp; Affirm.</p>
                   </div>
-                )}
-
-                {paymentMethod === 'card' && (
-                  !stripePromise ? (
-                    <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-100 text-xs text-center text-amber-700">
-                      <p className="font-medium">Card payments not yet configured</p>
-                      <p className="mt-1">Add your Stripe keys to .env.local to enable card &amp; Affirm.</p>
-                    </div>
-                  ) : grandTotal === null ? (
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 text-xs text-center text-blue-600">
-                      Enter your shipping ZIP above to calculate the total before paying.
-                    </div>
-                  ) : !clientSecret ? (
-                    <div className="mt-4 flex items-center justify-center gap-2 py-6 text-sm text-gray-400">
-                      <Loader2 size={16} className="animate-spin" /> Loading payment options…
-                    </div>
-                  ) : (
-                    <Elements
-                      stripe={stripePromise}
-                      options={{ clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#7c2d12' } } }}
-                    >
-                      <StripePaymentSection
-                        grandTotal={grandTotal}
-                        validate={validate}
-                        getOrderData={getOrderData}
-                        clientSecret={clientSecret}
-                        getSaveOrderPayload={(paymentIntentId) => ({
-                          paymentIntentId,
-                          paymentType: 'card',
-                          customerEmail: shipAddr.email,
-                          customerName: shipAddr.name,
-                          phone: shipAddr.phone,
-                          deliveryMethod,
-                          shippingAddress: deliveryMethod === 'ship' ? {
-                            address: shipAddr.address,
-                            city: shipAddr.city,
-                            state: shipAddr.state,
-                            zip: shipAddr.zip,
-                          } : null,
-                          items: items.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price })),
-                          subtotal,
-                          shippingCost: shippingCost ?? 0,
-                          tax,
-                          total: grandTotal,
-                          selectedService: selectedRate?.service ?? 'FEDEX_GROUND',
-                        })}
-                        clearCart={clearCart}
-                      />
-                    </Elements>
-                  )
+                ) : grandTotal === null ? (
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 text-xs text-center text-blue-600">
+                    Enter your shipping ZIP above to calculate the total before paying.
+                  </div>
+                ) : !clientSecret ? (
+                  <div className="flex items-center justify-center gap-2 py-6 text-sm text-gray-400">
+                    <Loader2 size={16} className="animate-spin" /> Loading payment options…
+                  </div>
+                ) : (
+                  <Elements
+                    stripe={stripePromise}
+                    options={{ clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#7c2d12' } } }}
+                  >
+                    <StripePaymentSection
+                      grandTotal={grandTotal}
+                      validate={validate}
+                      getOrderData={getOrderData}
+                      clientSecret={clientSecret}
+                      getSaveOrderPayload={(paymentIntentId) => ({
+                        paymentIntentId,
+                        paymentType: 'card',
+                        customerEmail: deliveryMethod === 'ship' ? shipAddr.email : contact.email,
+                        customerName: deliveryMethod === 'ship' ? shipAddr.name : contact.name,
+                        phone: deliveryMethod === 'ship' ? shipAddr.phone : contact.phone,
+                        deliveryMethod,
+                        shippingAddress: deliveryMethod === 'ship' ? {
+                          address: shipAddr.address,
+                          city: shipAddr.city,
+                          state: shipAddr.state,
+                          zip: shipAddr.zip,
+                        } : null,
+                        items: items.map(i => ({ name: i.product.name, quantity: i.quantity, price: i.product.price })),
+                        subtotal,
+                        shippingCost: shippingCost ?? 0,
+                        tax,
+                        total: grandTotal,
+                        selectedService: selectedRate?.service ?? 'PICKUP',
+                      })}
+                      clearCart={clearCart}
+                    />
+                  </Elements>
                 )}
               </section>
             </div>
@@ -747,20 +647,9 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
-                {paymentMethod !== 'card' ? (
-                  <button type="submit" disabled={loading}
-                    className="mt-5 w-full py-3.5 bg-maroon-500 hover:bg-maroon-600 disabled:bg-maroon-300 text-white font-semibold text-sm rounded-lg transition-colors flex items-center justify-center gap-2">
-                    {loading ? (
-                      <><Loader2 size={16} className="animate-spin" /> Processing…</>
-                    ) : (
-                      <><ShieldCheck size={16} /> Place Order</>
-                    )}
-                  </button>
-                ) : (
-                  <p className="mt-5 text-xs text-center text-gray-400 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    Use the <strong className="text-gray-600">Pay</strong> button in the payment section to complete your order.
-                  </p>
-                )}
+                <p className="mt-5 text-xs text-center text-gray-400 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                  Use the <strong className="text-gray-600">Pay</strong> button in the payment section to complete your order.
+                </p>
 
                 <p className="text-xs text-center text-gray-400 mt-3">
                   By placing your order you agree to our{' '}
