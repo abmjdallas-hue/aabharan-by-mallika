@@ -298,7 +298,7 @@ export default function CheckoutPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={e => e.preventDefault()}>
           <div className="flex flex-col lg:flex-row gap-8">
 
             {/* ── LEFT ── */}
@@ -310,7 +310,7 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label className={`flex gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${deliveryMethod === 'ship' ? 'border-maroon-400 bg-maroon-50' : 'border-gray-100 hover:border-gold-200'}`}>
                     <input type="radio" name="delivery" value="ship" checked={deliveryMethod === 'ship'}
-                      onChange={() => { setDeliveryMethod('ship'); setRates([]); setSelectedRate(null); setPaymentMethod('card') }}
+                      onChange={() => { setDeliveryMethod('ship'); setRates([]); setSelectedRate(null) }}
                       className="mt-1 text-maroon-500 shrink-0" />
                     <div>
                       <div className="flex items-center gap-1.5 mb-0.5">
