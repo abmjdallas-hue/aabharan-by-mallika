@@ -86,9 +86,6 @@ function StripePaymentSection({
       console.error('[save-order]', err)
     }
 
-    clearCart()
-    localStorage.setItem('aabharan-last-order', JSON.stringify(getOrderData(orderNumber)))
-
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -100,6 +97,8 @@ function StripePaymentSection({
       setStripeError(error.message ?? 'Payment failed. Please try again.')
       setPaying(false)
     } else {
+      clearCart()
+      localStorage.setItem('aabharan-last-order', JSON.stringify(getOrderData(orderNumber)))
       window.location.href = `/order-success?id=${orderNumber}`
     }
   }
