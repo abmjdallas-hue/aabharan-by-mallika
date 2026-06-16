@@ -1,6 +1,6 @@
 import { BUSINESS } from '@/lib/config'
 import { socialPosts, type SocialPost } from '@/data/socialPosts'
-import { getYouTubeVideos, getInstagramPosts } from '@/lib/socialFeeds'
+import { getYouTubeVideos, getInstagramPosts, getFacebookPosts } from '@/lib/socialFeeds'
 import SocialFeedClient from './SocialFeedClient'
 
 /**
@@ -15,13 +15,14 @@ import SocialFeedClient from './SocialFeedClient'
  * Newest first. The whole section hides itself when there's nothing.
  */
 export default async function SocialFeed() {
-  const [instagram, youtube] = await Promise.all([
+  const [instagram, youtube, facebook] = await Promise.all([
     getInstagramPosts(BUSINESS.beholdFeedId),
     getYouTubeVideos(BUSINESS.youtubeChannelId),
+    getFacebookPosts(BUSINESS.facebookPostUrls),
   ])
 
-  // Merge auto feeds + manual posts (Facebook lives here)
-  const merged: SocialPost[] = [...instagram, ...youtube, ...socialPosts]
+  // Merge all platforms + any extra manual posts into one row
+  const merged: SocialPost[] = [...instagram, ...youtube, ...facebook, ...socialPosts]
 
   // De-dupe by id, then sort newest first
   const seen = new Set<string>()

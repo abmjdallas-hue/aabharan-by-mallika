@@ -63,7 +63,7 @@ export default function SocialFeedClient({ posts }: { posts: SocialPost[] }) {
           initial={reduce ? undefined : 'hidden'}
           whileInView={reduce ? undefined : 'visible'}
           viewport={revealViewport}
-          className="flex gap-5 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory
+          className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory
                      [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5
                      [&::-webkit-scrollbar-thumb]:bg-gold-300 [&::-webkit-scrollbar-thumb]:rounded-full"
         >
@@ -76,7 +76,7 @@ export default function SocialFeedClient({ posts }: { posts: SocialPost[] }) {
               <motion.article
                 key={post.id}
                 variants={reduce ? undefined : fadeInUp}
-                className="group snap-start shrink-0 w-[270px] sm:w-[300px] bg-cream rounded-2xl overflow-hidden
+                className="group snap-start shrink-0 w-[200px] sm:w-[224px] bg-cream rounded-2xl overflow-hidden
                            border border-gold-200/70 shadow-sm transition-all duration-500 ease-out
                            hover:-translate-y-1.5 hover:shadow-[0_18px_40px_-12px_rgba(160,120,48,0.35)] hover:border-gold-300"
               >
@@ -127,15 +127,15 @@ export default function SocialFeedClient({ posts }: { posts: SocialPost[] }) {
                 </div>
 
                 {/* Body */}
-                <div className="p-4">
+                <div className="p-3.5">
                   {post.date && (
-                    <p className="text-[11px] text-gold-600 tracking-wide uppercase mb-1">{formatDate(post.date)}</p>
+                    <p className="text-[10px] text-gold-600 tracking-wide uppercase mb-1">{formatDate(post.date)}</p>
                   )}
                   {showTitle && (
-                    <h3 className="font-serif text-base font-semibold text-maroon-600 leading-snug mb-1.5">{post.title}</h3>
+                    <h3 className="font-serif text-sm font-semibold text-maroon-600 leading-snug mb-1">{post.title}</h3>
                   )}
                   {post.caption && (
-                    <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-4">{post.caption}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3">{post.caption}</p>
                   )}
                   <a
                     href={post.url}
