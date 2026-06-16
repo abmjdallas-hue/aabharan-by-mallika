@@ -33,6 +33,17 @@ export const BUSINESS = {
   facebook: 'https://www.facebook.com/AabharanJewelry',
   youtube: 'https://www.youtube.com/@MallikaJujjavarapu',
 
+  // ── "From Our Socials" auto-feeds ──────────────────────────
+  // youtubeChannelId : pulls your latest videos automatically (free,
+  //   no API key). Resolved from @MallikaJujjavarapu.
+  // beholdFeedId     : connect Instagram at https://behold.so (free),
+  //   create a feed, then paste its Feed ID here to auto-show your
+  //   real Instagram posts. Leave '' until you have it.
+  // Facebook has no free per-post API — add FB posts manually in
+  //   src/data/socialPosts.ts (they merge into the same row).
+  youtubeChannelId: 'UCs1S3aVm7wFyK35P_cgoJ9Q',
+  beholdFeedId: 'tttF0o4URWAKLJOSAk75',
+
   // ── Payment Details ────────────────────────────────────────
   zelleEmail: '',
   zellePhone: '4699991342',          // Zelle phone number
