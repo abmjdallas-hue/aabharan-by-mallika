@@ -36,6 +36,9 @@ function formatDate(iso: string) {
 export default function SocialFeed() {
   const reduce = useReducedMotion()
 
+  // Nothing to show until you add your real posts in src/data/socialPosts.ts
+  if (socialPosts.length === 0) return null
+
   return (
     <section className="py-14 sm:py-20 bg-beige/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
