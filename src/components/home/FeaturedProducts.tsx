@@ -33,8 +33,7 @@ export default function FeaturedProducts() {
         )}
 
         <div className="text-center mt-8 sm:hidden">
-          <Link href="/shop"
-            className="inline-block px-8 py-3 border border-maroon-500 text-maroon-500 hover:bg-maroon-500 hover:text-white rounded text-sm font-medium transition-colors">
+          <Link href="/shop" className="btn-luxury-outline text-maroon-500 hover:bg-maroon-500 hover:text-white">
             View All Products
           </Link>
         </div>

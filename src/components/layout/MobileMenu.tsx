@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { X, ChevronDown, ChevronUp, LayoutDashboard, LogOut, ShoppingBag, Heart } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { luxuryEase } from '@/lib/animations'
 
 interface NavLink {
   label: string
@@ -20,13 +22,27 @@ interface Props {
 export default function MobileMenu({ isOpen, onClose, links }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null)
   const { user, logout } = useAuth()
-
-  if (!isOpen) return null
+  const reduce = useReducedMotion()
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute left-0 top-0 h-full w-72 bg-ivory shadow-xl flex flex-col">
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <motion.div
+            className="absolute inset-0 bg-black/50"
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          />
+          <motion.div
+            className="absolute left-0 top-0 h-full w-72 bg-ivory shadow-xl flex flex-col"
+            initial={reduce ? { opacity: 0 } : { x: '-100%' }}
+            animate={reduce ? { opacity: 1 } : { x: 0 }}
+            exit={reduce ? { opacity: 0 } : { x: '-100%' }}
+            transition={{ duration: 0.45, ease: luxuryEase }}
+          >
         <div className="flex items-center justify-between p-5 border-b border-gold-200">
           <div>
             <div className="font-serif text-xl font-bold text-maroon-500">Aabharan</div>
@@ -116,7 +132,9 @@ export default function MobileMenu({ isOpen, onClose, links }: Props) {
             </>
           )}
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   )
 }

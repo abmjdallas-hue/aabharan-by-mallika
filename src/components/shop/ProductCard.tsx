@@ -41,7 +41,7 @@ export default function ProductCard({ product }: Props) {
 
   return (
     <>
-      <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
+      <div className="group relative bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_18px_40px_-12px_rgba(160,120,48,0.35)] hover:border-gold-300">
         <Link href={`/product/${product.slug}`} className="block">
           {/* Image — primary + hover second image */}
           <div className="relative aspect-square overflow-hidden bg-gray-50">
@@ -51,10 +51,10 @@ export default function ProductCard({ product }: Props) {
                   src={product.image}
                   alt={product.name}
                   fill
-                  className={`object-cover transition-all duration-500 ${
+                  className={`object-cover transition-all duration-700 ease-out ${
                     product.gallery?.[1]
-                      ? 'group-hover:opacity-0 group-hover:scale-105'
-                      : 'group-hover:scale-105'
+                      ? 'group-hover:opacity-0 group-hover:scale-[1.04]'
+                      : 'group-hover:scale-[1.04]'
                   }`}
                 />
                 {product.gallery?.[1] && (
@@ -62,7 +62,7 @@ export default function ProductCard({ product }: Props) {
                     src={product.gallery[1]}
                     alt={`${product.name} — alternate view`}
                     fill
-                    className="object-cover transition-all duration-500 opacity-0 group-hover:opacity-100 scale-105 group-hover:scale-100"
+                    className="object-cover transition-all duration-700 ease-out opacity-0 group-hover:opacity-100 scale-[1.04] group-hover:scale-100"
                   />
                 )}
               </>

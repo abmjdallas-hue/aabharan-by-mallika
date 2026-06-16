@@ -34,15 +34,12 @@ export default function BridalSection() {
             set with 22KT gold and precious stones, ensuring you shine on every occasion.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <Link
-              href="/shop?collection=Bridal+Collection"
-              className="px-8 py-3 bg-gold-500 hover:bg-gold-600 text-white font-semibold text-sm rounded transition-all hover:shadow-lg"
-            >
+            <Link href="/shop?collection=Bridal+Collection" className="btn-luxury-gold">
               Explore Bridal Sets
             </Link>
             <Link
               href="/contact"
-              className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-maroon-600 font-semibold text-sm rounded transition-all"
+              className="btn-luxury-outline text-white hover:bg-white hover:text-maroon-600"
             >
               Book Consultation
             </Link>

@@ -14,6 +14,18 @@
   * {
     @apply scroll-smooth;
   }
+
+  /* Respect users who prefer reduced motion — kill animations/transitions */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
@@ -34,5 +46,58 @@
   }
   .section-title {
     @apply font-serif text-3xl sm:text-4xl font-bold text-maroon-500;
+  }
+
+  /* ── Luxury buttons — gold sweep / shine on hover ───────────── */
+  .btn-luxury {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden
+           px-8 py-3 rounded-full font-semibold text-sm tracking-wide
+           transition-all duration-500 ease-out
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2;
+  }
+  /* The sweeping shine that crosses the button on hover */
+  .btn-luxury::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full skew-x-12
+           bg-gradient-to-r from-transparent via-white/35 to-transparent
+           transition-transform duration-700 ease-out pointer-events-none;
+  }
+  .btn-luxury:hover::after {
+    @apply translate-x-full;
+  }
+  .btn-luxury:hover {
+    @apply shadow-lg -translate-y-0.5;
+  }
+
+  /* Solid gold variant */
+  .btn-luxury-gold {
+    @apply btn-luxury text-white;
+    background-image: linear-gradient(120deg, #C9A84C 0%, #DDB84A 50%, #A07830 100%);
+  }
+  /* Solid maroon variant */
+  .btn-luxury-maroon {
+    @apply btn-luxury bg-maroon-500 hover:bg-maroon-600 text-white;
+  }
+  /* Outline / ghost variant (sits on dark or light) */
+  .btn-luxury-outline {
+    @apply btn-luxury border-2 border-current bg-transparent;
+  }
+
+  /* Soft gold accent underline — used under hero titles & headings */
+  .gold-accent {
+    @apply inline-block h-[3px] w-20 rounded-full;
+    background-image: linear-gradient(90deg, transparent, #C9A84C, #EAC863, #C9A84C, transparent);
+  }
+}
+
+@layer utilities {
+  /* Slow gold shimmer for the hero accent line */
+  @keyframes goldShimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .animate-gold-shimmer {
+    background-size: 200% auto;
+    animation: goldShimmer 4s linear infinite;
   }
 }

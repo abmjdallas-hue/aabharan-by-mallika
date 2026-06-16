@@ -12,22 +12,28 @@ export default function Footer() {
             <div className="font-serif text-2xl font-bold text-gold-400 mb-1">Aabharan</div>
             <div className="text-xs text-gold-500 tracking-widest mb-4">by Mallika</div>
             <p className="text-sm text-gray-400 leading-relaxed">{BUSINESS.tagline}</p>
-            <div className="flex gap-4 mt-5">
-              {BUSINESS.instagram && (
-                <a href={BUSINESS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-gray-400 hover:text-gold-400 transition-colors">
-                  <Instagram size={20} />
-                </a>
-              )}
-              {BUSINESS.facebook && (
-                <a href={BUSINESS.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-gray-400 hover:text-gold-400 transition-colors">
-                  <Facebook size={20} />
-                </a>
-              )}
-              {BUSINESS.youtube && (
-                <a href={BUSINESS.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="text-gray-400 hover:text-gold-400 transition-colors">
-                  <Youtube size={20} />
-                </a>
-              )}
+            <div className="flex gap-3 mt-5">
+              {[
+                { href: BUSINESS.instagram, label: 'Instagram', Icon: Instagram },
+                { href: BUSINESS.facebook, label: 'Facebook', Icon: Facebook },
+                { href: BUSINESS.youtube, label: 'YouTube', Icon: Youtube },
+              ]
+                .filter((s) => s.href)
+                .map(({ href, label, Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="flex items-center justify-center w-10 h-10 rounded-full border border-gold-500/40 text-gray-300
+                               transition-all duration-300 hover:bg-gold-500 hover:text-white hover:border-gold-500
+                               hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(201,168,76,0.6)]
+                               focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+                  >
+                    <Icon size={18} />
+                  </a>
+                ))}
             </div>
           </div>
 

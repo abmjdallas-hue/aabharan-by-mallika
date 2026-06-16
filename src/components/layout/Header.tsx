@@ -42,6 +42,7 @@ export default function Header() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [storeOpen, setStoreOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const { hours } = useStoreHours()
 
   useEffect(() => {
@@ -49,6 +50,14 @@ export default function Header() {
     const interval = setInterval(() => setStoreOpen(isStoreOpen(hours)), 60_000)
     return () => clearInterval(interval)
   }, [hours])
+
+  // Glass + soft shadow once the user scrolls past the top
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   // Close user menu on outside click
@@ -66,7 +75,13 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-ivory border-b border-gold-200 shadow-sm">
+      <header
+        className={`sticky top-0 z-50 transition-all duration-500 ease-out ${
+          scrolled
+            ? 'bg-ivory/80 backdrop-blur-md border-b border-gold-200/70 shadow-[0_8px_30px_-12px_rgba(160,120,48,0.25)]'
+            : 'bg-ivory border-b border-gold-200/40 shadow-none'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Mobile menu button */}

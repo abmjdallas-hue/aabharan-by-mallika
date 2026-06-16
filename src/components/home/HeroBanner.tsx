@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { luxuryEase } from '@/lib/animations'
 
 const slides = [
   {
@@ -35,20 +37,33 @@ const slides = [
 
 export default function HeroBanner() {
   const [current, setCurrent] = useState(0)
+  const reduce = useReducedMotion()
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent((c) => (c + 1) % slides.length), 5000)
+    const timer = setInterval(() => setCurrent((c) => (c + 1) % slides.length), 6000)
     return () => clearInterval(timer)
   }, [])
 
   const slide = slides[current]
 
+  // Stagger children: subtitle → title → divider → description → CTAs
+  const container = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.18, delayChildren: 0.15 } },
+  }
+  const item = reduce
+    ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
+    : {
+        hidden: { opacity: 0, y: 24 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: luxuryEase } },
+      }
+
   return (
-    <section className="relative h-[70vh] sm:h-[80vh] lg:h-screen max-h-[800px] overflow-hidden">
+    <section className="relative h-[78vh] sm:h-[82vh] lg:h-screen max-h-[860px] overflow-hidden">
       {slides.map((s, i) => (
         <div
           key={s.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 transition-opacity duration-[1400ms] ease-in-out ${i === current ? 'opacity-100' : 'opacity-0'}`}
           style={{ background: s.gradient }}
         >
           {/* Subtle dot-grid texture */}
@@ -59,44 +74,81 @@ export default function HeroBanner() {
               backgroundSize: '40px 40px',
             }}
           />
-          {/* Decorative gold circle */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full border border-gold-400/20 opacity-30" />
+          {/* Soft dark vignette for text legibility */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
+          {/* Decorative gold circles — gentle float */}
+          <motion.div
+            aria-hidden
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full border border-gold-400/20 opacity-30"
+            animate={reduce ? undefined : { scale: [1, 1.04, 1] }}
+            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <div className="absolute right-8 top-1/2 -translate-y-1/2 w-[45vw] h-[45vw] max-w-[450px] max-h-[450px] rounded-full border border-gold-400/15 opacity-20" />
-          {/* Brand mark */}
-          <div className="absolute right-12 lg:right-24 top-1/2 -translate-y-1/2 hidden sm:flex flex-col items-center justify-center w-48 h-48 lg:w-64 lg:h-64 rounded-full border-2 border-gold-400/30">
+          {/* Brand mark — gentle entrance */}
+          <motion.div
+            aria-hidden
+            className="absolute right-12 lg:right-24 top-1/2 -translate-y-1/2 hidden sm:flex flex-col items-center justify-center w-48 h-48 lg:w-64 lg:h-64 rounded-full border-2 border-gold-400/30"
+            initial={reduce ? false : { opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.6, ease: luxuryEase }}
+          >
             <span className="font-serif text-3xl lg:text-4xl font-bold text-gold-300/60 tracking-wide">ᳩ</span>
             <span className="font-serif text-base lg:text-lg text-gold-300/50 tracking-widest mt-1">Aabharan</span>
-          </div>
+          </motion.div>
         </div>
       ))}
 
       <div className="relative z-10 h-full flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="max-w-xl">
-            <p className="text-gold-300 text-sm sm:text-base tracking-[0.3em] uppercase mb-3 font-light">
-              {slide.subtitle}
-            </p>
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
-              {slide.title}
-            </h1>
-            <p className="text-gray-200 text-sm sm:text-base mb-8 max-w-sm leading-relaxed">
-              {slide.description}
-            </p>
-            <div className="flex gap-4 flex-wrap">
-              <Link
-                href={slide.href}
-                className="px-8 py-3 bg-gold-500 hover:bg-gold-600 text-white font-semibold text-sm rounded transition-all hover:shadow-lg"
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={slide.id}
+              className="max-w-xl"
+              variants={container}
+              initial="hidden"
+              animate="visible"
+              exit={reduce ? undefined : { opacity: 0, transition: { duration: 0.4 } }}
+            >
+              <motion.p
+                variants={item}
+                className="text-gold-300 text-sm sm:text-base tracking-[0.35em] uppercase mb-4 font-light"
               >
-                {slide.cta}
-              </Link>
-              <Link
-                href="/shop"
-                className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-gray-900 font-semibold text-sm rounded transition-all"
+                {slide.subtitle}
+              </motion.p>
+
+              <motion.h1
+                variants={item}
+                className="font-serif text-4xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.05] mb-5"
               >
-                View All
-              </Link>
-            </div>
-          </div>
+                {slide.title}
+              </motion.h1>
+
+              {/* Shimmering gold accent line */}
+              <motion.span
+                variants={item}
+                className="gold-accent animate-gold-shimmer mb-6"
+              />
+
+              <motion.p
+                variants={item}
+                className="text-gray-200 text-sm sm:text-base mb-9 mt-2 max-w-md leading-relaxed"
+              >
+                {slide.description}
+              </motion.p>
+
+              <motion.div variants={item} className="flex gap-4 flex-wrap">
+                <Link href={slide.href} className="btn-luxury-gold">
+                  {slide.cta}
+                </Link>
+                <Link
+                  href="/shop"
+                  className="btn-luxury-outline text-white hover:bg-white hover:text-gray-900"
+                >
+                  View All
+                </Link>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
@@ -106,7 +158,7 @@ export default function HeroBanner() {
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`h-2.5 rounded-full transition-all ${i === current ? 'bg-gold-400 w-6' : 'bg-white/50 w-2.5'}`}
+            className={`h-2.5 rounded-full transition-all duration-500 ${i === current ? 'bg-gold-400 w-7' : 'bg-white/50 w-2.5 hover:bg-white/80'}`}
             aria-label={`Slide ${i + 1}`}
           />
         ))}
