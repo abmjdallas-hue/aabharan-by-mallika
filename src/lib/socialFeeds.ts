@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────
 import type { SocialPost } from '@/data/socialPosts'
 
-const REVALIDATE = 3600 // re-fetch at most once an hour
+const REVALIDATE = 600 // re-fetch newest posts at most every 10 minutes
 
 function decodeEntities(s: string): string {
   return s
