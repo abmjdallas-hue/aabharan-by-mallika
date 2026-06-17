@@ -13,9 +13,10 @@ import { getCollectionGallery } from '@/lib/collectionImages'
 export default async function HomePage() {
   const gallery = await getCollectionGallery()
 
-  // One hero slide per uploaded collection photo, labelled with its collection.
+  // Hero slides from uploaded collection photos, capped at 2 per collection
+  // (the "Our Collections" cards still rotate through all of them).
   const collectionSlides: HeroSlide[] = collections.flatMap((col) =>
-    (gallery[col.name] ?? []).map((image, i) => ({
+    (gallery[col.name] ?? []).slice(0, 2).map((image, i) => ({
       id: `${col.name}-${i}`,
       title: col.name,
       subtitle: 'Our Collections',
