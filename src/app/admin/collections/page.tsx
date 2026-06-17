@@ -3,19 +3,21 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Store, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Store, Upload, Loader2, AlertCircle, X, ImageIcon } from 'lucide-react'
 import { collections } from '@/data/products'
 import { compressImage } from '@/lib/compress-image'
 
 interface CollectionImage {
+  id: string
   name: string
   image_url: string
+  sort_order: number
 }
 
 export default function AdminCollectionsPage() {
-  const [images, setImages] = useState<Record<string, string>>({})
+  // collection name -> list of uploaded photos
+  const [images, setImages] = useState<Record<string, CollectionImage[]>>({})
   const [uploading, setUploading] = useState<string | null>(null)
-  const [saved, setSaved] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
@@ -23,40 +25,52 @@ export default function AdminCollectionsPage() {
     fetch('/api/admin/collection-images')
       .then(r => r.json())
       .then((data: CollectionImage[]) => {
-        const map: Record<string, string> = {}
-        data.forEach(c => { map[c.name] = c.image_url })
+        const map: Record<string, CollectionImage[]> = {}
+        data.forEach(c => { (map[c.name] ??= []).push(c) })
         setImages(map)
       })
+      .catch(() => {})
   }, [])
 
-  const handleUpload = async (colName: string, file: File) => {
+  const handleUpload = async (colName: string, files: FileList) => {
     setUploading(colName)
     setError(null)
-    setSaved(null)
-
     try {
-      const compressed = await compressImage(file)
-      const form = new FormData()
-      form.append('file', compressed)
-      const uploadRes = await fetch('/api/admin/upload-image', { method: 'POST', body: form })
-      const uploadData = await uploadRes.json()
-      if (!uploadRes.ok || !uploadData.imageUrl) throw new Error(uploadData.error ?? 'Upload failed')
+      for (const file of Array.from(files)) {
+        const compressed = await compressImage(file)
+        const form = new FormData()
+        form.append('file', compressed)
+        const uploadRes = await fetch('/api/admin/upload-image', { method: 'POST', body: form })
+        const uploadData = await uploadRes.json()
+        if (!uploadRes.ok || !uploadData.imageUrl) throw new Error(uploadData.error ?? 'Upload failed')
 
-      const saveRes = await fetch('/api/admin/collection-images', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: colName, image_url: uploadData.imageUrl }),
-      })
-      if (!saveRes.ok) throw new Error('Failed to save image')
+        const saveRes = await fetch('/api/admin/collection-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: colName, image_url: uploadData.imageUrl }),
+        })
+        const saved = await saveRes.json()
+        if (!saveRes.ok) throw new Error(saved.error ?? 'Failed to save image')
 
-      setImages(prev => ({ ...prev, [colName]: uploadData.imageUrl }))
-      setSaved(colName)
-      setTimeout(() => setSaved(null), 2500)
+        setImages(prev => ({ ...prev, [colName]: [...(prev[colName] ?? []), saved] }))
+      }
     } catch (err) {
       setError((err as Error).message)
     } finally {
       setUploading(null)
     }
+  }
+
+  const handleDelete = async (colName: string, id: string) => {
+    setError(null)
+    // optimistic removal
+    setImages(prev => ({ ...prev, [colName]: (prev[colName] ?? []).filter(i => i.id !== id) }))
+    const res = await fetch('/api/admin/collection-images', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    if (!res.ok) setError('Failed to delete image — refresh and try again.')
   }
 
   return (
@@ -80,7 +94,10 @@ export default function AdminCollectionsPage() {
 
         <div className="mb-6">
           <h1 className="text-xl font-bold text-gray-800">Collection Images</h1>
-          <p className="text-sm text-gray-500 mt-1">Upload a banner photo for each collection. Shows as a tall card on the homepage.</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Upload one or more photos for each collection. They rotate as a slideshow on the
+            homepage hero and in the &ldquo;Our Collections&rdquo; cards.
+          </p>
         </div>
 
         {error && (
@@ -89,71 +106,68 @@ export default function AdminCollectionsPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+        <div className="space-y-5">
           {collections.map((col) => {
-            const imgUrl = images[col.name]
+            const photos = images[col.name] ?? []
             const isUploading = uploading === col.name
-            const isSaved = saved === col.name
 
             return (
-              <div key={col.name} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                {/* Image preview */}
-                <div
-                  className="relative h-40 bg-gray-100 cursor-pointer group"
-                  onClick={() => inputRefs.current[col.name]?.click()}
-                >
-                  {imgUrl ? (
-                    <>
-                      <Image src={imgUrl} alt={col.name} fill className="object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <div className="flex items-center gap-2 text-white text-sm font-medium">
-                          <Upload size={16} /> Change Photo
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-maroon-400 transition-colors">
-                      <Upload size={24} />
-                      <span className="text-xs">Click to upload</span>
-                    </div>
-                  )}
-
-                  {isUploading && (
-                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                      <Loader2 size={24} className="animate-spin text-maroon-500" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-4 flex items-center justify-between gap-3">
+              <div key={col.name} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-gray-800 truncate">{col.name}</p>
                     <p className="text-xs text-gray-400 truncate">{col.description}</p>
                   </div>
+                  <span className="text-xs text-gray-400 shrink-0">
+                    {photos.length} {photos.length === 1 ? 'photo' : 'photos'}
+                  </span>
+                </div>
 
-                  {isSaved ? (
-                    <span className="text-xs text-green-600 flex items-center gap-1 shrink-0">
-                      <CheckCircle2 size={12} /> Saved
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => inputRefs.current[col.name]?.click()}
-                      disabled={isUploading}
-                      className="text-xs px-3 py-1.5 bg-maroon-500 hover:bg-maroon-600 disabled:bg-maroon-300 text-white rounded-lg transition-colors shrink-0"
-                    >
-                      {imgUrl ? 'Change' : 'Upload'}
-                    </button>
-                  )}
+                <div className="flex flex-wrap gap-3">
+                  {photos.map((photo) => (
+                    <div key={photo.id} className="relative w-28 h-28 rounded-lg overflow-hidden border border-gray-100 group">
+                      <Image src={photo.image_url} alt={col.name} fill className="object-cover" />
+                      <button
+                        onClick={() => handleDelete(col.name, photo.id)}
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 hover:bg-red-600 text-white flex items-center justify-center transition-colors"
+                        aria-label="Remove photo"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Add tile */}
+                  <button
+                    onClick={() => inputRefs.current[col.name]?.click()}
+                    disabled={isUploading}
+                    className="w-28 h-28 rounded-lg border-2 border-dashed border-gray-200 hover:border-maroon-400 text-gray-400 hover:text-maroon-500 flex flex-col items-center justify-center gap-1 transition-colors disabled:opacity-50"
+                  >
+                    {isUploading ? (
+                      <Loader2 size={22} className="animate-spin text-maroon-500" />
+                    ) : photos.length === 0 ? (
+                      <>
+                        <ImageIcon size={22} />
+                        <span className="text-xs">Add photos</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={22} />
+                        <span className="text-xs">Add more</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
                   ref={el => { inputRefs.current[col.name] = el }}
                   onChange={e => {
-                    const file = e.target.files?.[0]
-                    if (file) handleUpload(col.name, file)
+                    const files = e.target.files
+                    if (files && files.length) handleUpload(col.name, files)
                     e.target.value = ''
                   }}
                 />

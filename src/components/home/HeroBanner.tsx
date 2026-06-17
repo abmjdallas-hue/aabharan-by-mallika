@@ -2,10 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { luxuryEase } from '@/lib/animations'
 
-const slides = [
+export interface HeroSlide {
+  id: string | number
+  title: string
+  subtitle: string
+  description: string
+  cta: string
+  href: string
+  gradient?: string
+  image?: string
+}
+
+// Shown only when no collection photos have been uploaded yet.
+const DEFAULT_SLIDES: HeroSlide[] = [
   {
     id: 1,
     title: 'Bridal Jewellery',
@@ -35,16 +48,19 @@ const slides = [
   },
 ]
 
-export default function HeroBanner() {
+export default function HeroBanner({ collectionSlides }: { collectionSlides?: HeroSlide[] }) {
+  const slides = collectionSlides && collectionSlides.length > 0 ? collectionSlides : DEFAULT_SLIDES
+
   const [current, setCurrent] = useState(0)
   const reduce = useReducedMotion()
 
   useEffect(() => {
+    if (slides.length <= 1) return
     const timer = setInterval(() => setCurrent((c) => (c + 1) % slides.length), 6000)
     return () => clearInterval(timer)
-  }, [])
+  }, [slides.length])
 
-  const slide = slides[current]
+  const slide = slides[current] ?? slides[0]
 
   // Stagger children: subtitle → title → divider → description → CTAs
   const container = {
@@ -64,37 +80,54 @@ export default function HeroBanner() {
         <div
           key={s.id}
           className={`absolute inset-0 transition-opacity duration-[1400ms] ease-in-out ${i === current ? 'opacity-100' : 'opacity-0'}`}
-          style={{ background: s.gradient }}
+          style={s.image ? undefined : { background: s.gradient }}
         >
-          {/* Subtle dot-grid texture */}
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(246,201,14,0.5) 1px, transparent 0)',
-              backgroundSize: '40px 40px',
-            }}
-          />
-          {/* Soft dark vignette for text legibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
-          {/* Decorative gold circles — gentle float */}
-          <motion.div
-            aria-hidden
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full border border-gold-400/20 opacity-30"
-            animate={reduce ? undefined : { scale: [1, 1.04, 1] }}
-            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <div className="absolute right-8 top-1/2 -translate-y-1/2 w-[45vw] h-[45vw] max-w-[450px] max-h-[450px] rounded-full border border-gold-400/15 opacity-20" />
-          {/* Brand mark — gentle entrance */}
-          <motion.div
-            aria-hidden
-            className="absolute right-12 lg:right-24 top-1/2 -translate-y-1/2 hidden sm:flex flex-col items-center justify-center w-48 h-48 lg:w-64 lg:h-64 rounded-full border-2 border-gold-400/30"
-            initial={reduce ? false : { opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.6, ease: luxuryEase }}
-          >
-            <span className="font-serif text-3xl lg:text-4xl font-bold text-gold-300/60 tracking-wide">ᳩ</span>
-            <span className="font-serif text-base lg:text-lg text-gold-300/50 tracking-widest mt-1">Aabharan</span>
-          </motion.div>
+          {s.image ? (
+            <>
+              <Image
+                src={s.image}
+                alt={s.title}
+                fill
+                priority={i === 0}
+                className="object-cover"
+                sizes="100vw"
+              />
+              {/* Darker scrim so the headline stays readable over any photo */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/20" />
+            </>
+          ) : (
+            <>
+              {/* Subtle dot-grid texture */}
+              <div
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(246,201,14,0.5) 1px, transparent 0)',
+                  backgroundSize: '40px 40px',
+                }}
+              />
+              {/* Soft dark vignette for text legibility */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
+              {/* Decorative gold circles — gentle float */}
+              <motion.div
+                aria-hidden
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full border border-gold-400/20 opacity-30"
+                animate={reduce ? undefined : { scale: [1, 1.04, 1] }}
+                transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <div className="absolute right-8 top-1/2 -translate-y-1/2 w-[45vw] h-[45vw] max-w-[450px] max-h-[450px] rounded-full border border-gold-400/15 opacity-20" />
+              {/* Brand mark — gentle entrance */}
+              <motion.div
+                aria-hidden
+                className="absolute right-12 lg:right-24 top-1/2 -translate-y-1/2 hidden sm:flex flex-col items-center justify-center w-48 h-48 lg:w-64 lg:h-64 rounded-full border-2 border-gold-400/30"
+                initial={reduce ? false : { opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1.6, ease: luxuryEase }}
+              >
+                <span className="font-serif text-3xl lg:text-4xl font-bold text-gold-300/60 tracking-wide">ᳩ</span>
+                <span className="font-serif text-base lg:text-lg text-gold-300/50 tracking-widest mt-1">Aabharan</span>
+              </motion.div>
+            </>
+          )}
         </div>
       ))}
 
