@@ -43,10 +43,6 @@ export const BUSINESS = {
   //   src/data/socialPosts.ts (they merge into the same row).
   youtubeChannelId: 'UCs1S3aVm7wFyK35P_cgoJ9Q',
   beholdFeedId: 'tttF0o4URWAKLJOSAk75',
-  // Facebook has no free per-post API. Paste the links to the FB posts
-  // you want shown (open a post → ⋯ → Copy link). We pull each post's
-  // image automatically so it appears in the same row as Instagram.
-  facebookPostUrls: [] as string[],
 
   // ── Payment Details ────────────────────────────────────────
   zelleEmail: '',

@@ -63,56 +63,6 @@ export async function getYouTubeVideos(channelId: string, limit = 8): Promise<So
   }
 }
 
-/**
- * Build Facebook cards from a list of post URLs by reading each post's
- * Open Graph image/description (no API key). Facebook may block server
- * scraping for some posts — those simply fall back to a branded card.
- */
-export async function getFacebookPosts(urls: string[], limit = 8): Promise<SocialPost[]> {
-  if (!urls?.length) return []
-  const wanted = urls.filter(Boolean).slice(0, limit)
-
-  const results = await Promise.all(
-    wanted.map(async (url, i): Promise<SocialPost> => {
-      let thumbnail = ''
-      let caption = ''
-      try {
-        const res = await fetch(url, {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            Accept: 'text/html,application/xhtml+xml',
-          },
-          next: { revalidate: REVALIDATE },
-        })
-        if (res.ok) {
-          const html = await res.text()
-          const og = (prop: string) =>
-            html.match(new RegExp(`<meta[^>]+property="og:${prop}"[^>]+content="([^"]+)"`))?.[1] ||
-            html.match(new RegExp(`<meta[^>]+content="([^"]+)"[^>]+property="og:${prop}"`))?.[1] ||
-            ''
-          thumbnail = decodeEntities(og('image'))
-          caption = decodeEntities(og('description')).slice(0, 140)
-        }
-      } catch {
-        /* leave blank — branded fallback card still renders */
-      }
-      return {
-        id: `fb-${i}-${url.slice(-12)}`,
-        platform: 'facebook',
-        type: 'post',
-        title: 'Facebook',
-        caption,
-        date: '',
-        thumbnail,
-        url,
-      }
-    })
-  )
-
-  return results
-}
-
 /** Minimal shape of a Behold feed item (defensive — fields vary by plan). */
 interface BeholdSize { mediaUrl?: string }
 interface BeholdItem {
