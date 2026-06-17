@@ -92,7 +92,10 @@ function ProductDisplay({ product }: { product: Product }) {
   const inWishlist = isInWishlist(product.id)
   const buyable = isBuyable(product)
 
-  const [activeImage, setActiveImage] = useState(product.image)
+  const allImages = [product.image, ...product.gallery.filter((g) => g !== product.image)].filter(Boolean)
+  const hasImages = allImages.length > 0
+
+  const [activeImage, setActiveImage] = useState(allImages[0] || '')
   const [added, setAdded] = useState(false)
   const [activeTab, setActiveTab] = useState<'description' | 'details' | 'shipping'>('description')
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 })
@@ -118,7 +121,6 @@ function ProductDisplay({ product }: { product: Product }) {
 
   const isNoExchange = BUYABLE_CATEGORIES.includes(product.category)
 
-  const allImages = [product.image, ...product.gallery.filter((g) => g !== product.image)]
   const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
 
   const handleAddToCart = () => {
@@ -160,25 +162,33 @@ function ProductDisplay({ product }: { product: Product }) {
               onMouseEnter={() => setIsZooming(true)}
               onMouseLeave={() => setIsZooming(false)}
             >
-              <Image src={activeImage} alt={product.name} fill className="object-cover" priority />
-              {/* Zoom overlay */}
-              {isZooming && (
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    backgroundImage: `url(${activeImage})`,
-                    backgroundSize: '250%',
-                    backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
-                    backgroundRepeat: 'no-repeat',
-                  }}
-                />
+              {hasImages ? (
+                <>
+                  <Image src={activeImage} alt={product.name} fill className="object-cover" priority />
+                  {/* Zoom overlay */}
+                  {isZooming && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        backgroundImage: `url(${activeImage})`,
+                        backgroundSize: '250%',
+                        backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                        backgroundRepeat: 'no-repeat',
+                      }}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-maroon-800 to-maroon-500 flex items-center justify-center">
+                  <span className="text-white/20 font-serif text-7xl select-none">◆</span>
+                </div>
               )}
               {product.stockStatus === 'out_of_stock' && (
                 <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
                   <span className="bg-gray-800 text-white px-4 py-2 rounded text-sm font-semibold">Out of Stock</span>
                 </div>
               )}
-              {!isZooming && (
+              {hasImages && !isZooming && (
                 <div className="absolute bottom-3 right-3 bg-black/40 text-white text-[10px] px-2 py-1 rounded-full pointer-events-none hidden sm:block">
                   Hover to zoom
                 </div>
