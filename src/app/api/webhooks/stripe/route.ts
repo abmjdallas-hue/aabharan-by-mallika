@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
   await supabaseAdmin.from('orders').update({ status: 'paid' }).eq('order_number', orderNumber)
 
   let trackingNumber: string | undefined
+  let labelUrl: string | undefined
 
   // Auto-create FedEx label for shipped orders
   if (order.delivery_method === 'ship' && order.shipping_address) {
@@ -65,10 +66,11 @@ export async function POST(req: NextRequest) {
         serviceType: order.selected_service ?? 'FEDEX_GROUND',
       })
       trackingNumber = result.trackingNumber
+      labelUrl = result.labelUrl
 
       await supabaseAdmin.from('orders').update({
         fedex_tracking_number: trackingNumber,
-        fedex_label_url: result.labelUrl ?? null,
+        fedex_label_url: labelUrl ?? null,
         status: 'label_created',
       }).eq('order_number', orderNumber)
     } catch (err) {
@@ -107,7 +109,7 @@ export async function POST(req: NextRequest) {
       paymentType: 'card',
       shippingAddress: order.shipping_address,
       selectedService: order.selected_service,
-      labelUrl: order.fedex_label_url ?? undefined,
+      labelUrl,
       ...emailParams,
     })
   } catch (err) {
