@@ -22,12 +22,17 @@ function LoginForm() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const result = await login(email, password)
-    setLoading(false)
-    if (result.error) {
-      setError(result.error)
-    } else {
-      router.push(redirect ? `/${redirect}` : '/')
+    try {
+      const result = await login(email, password)
+      if (result.error) {
+        setError(result.error)
+      } else {
+        router.push(redirect ? `/${redirect}` : '/')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 

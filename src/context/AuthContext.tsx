@@ -22,6 +22,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Reject if a network call hangs so the UI never spins forever waiting on Supabase.
+function withTimeout<T>(p: PromiseLike<T>, ms = 20000): Promise<T> {
+  return Promise.race([
+    p as Promise<T>,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), ms),
+    ),
+  ])
+}
+
 // ── localStorage fallback constants ───────────────────────────────────────────
 const USERS_KEY = 'aabharan-users'
 const SESSION_KEY = 'aabharan-session'
@@ -56,10 +66,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // ── Supabase mode ────────────────────────────────────────────────────────
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) await fetchProfile(session.user.id, session.user.email!)
-      setLoading(false)
-    })
+    withTimeout(supabase.auth.getSession())
+      .then(async ({ data: { session } }) => {
+        if (session?.user) await fetchProfile(session.user.id, session.user.email!)
+      })
+      .catch((err) => console.error('[auth] getSession failed', err))
+      .finally(() => setLoading(false)) // always resolve loading so gated screens never hang
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
@@ -73,17 +85,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const fetchProfile = async (id: string, email: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('name, is_admin')
-      .eq('id', id)
-      .single()
-    setUser({
-      id,
-      email,
-      name: data?.name || email.split('@')[0],
-      isAdmin: data?.is_admin ?? false,
-    })
+    try {
+      const { data } = await withTimeout(
+        supabase.from('profiles').select('name, is_admin').eq('id', id).single(),
+      )
+      setUser({
+        id,
+        email,
+        name: data?.name || email.split('@')[0],
+        isAdmin: data?.is_admin ?? false,
+      })
+    } catch (err) {
+      // Profile lookup failed/timed out — fall back to a basic user so the app stays usable.
+      console.error('[auth] fetchProfile failed', err)
+      setUser({ id, email, name: email.split('@')[0], isAdmin: false })
+    }
   }
 
   // ── login ─────────────────────────────────────────────────────────────────
@@ -98,8 +114,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(SESSION_KEY, JSON.stringify(u))
       return {}
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return error ? { error: error.message } : {}
+    try {
+      const { error } = await withTimeout(supabase.auth.signInWithPassword({ email, password }))
+      return error ? { error: error.message } : {}
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Unable to sign in. Please try again.' }
+    }
   }
 
   // ── register ──────────────────────────────────────────────────────────────
@@ -116,12 +136,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(SESSION_KEY, JSON.stringify(u))
       return {}
     }
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    })
-    return error ? { error: error.message } : {}
+    try {
+      const { error } = await withTimeout(
+        supabase.auth.signUp({ email, password, options: { data: { name } } }),
+      )
+      return error ? { error: error.message } : {}
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Unable to create account. Please try again.' }
+    }
   }
 
   // ── logout ────────────────────────────────────────────────────────────────

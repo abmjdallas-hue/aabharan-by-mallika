@@ -26,12 +26,17 @@ export default function RegisterPage() {
       return
     }
     setLoading(true)
-    const result = await register(form.email, form.name, form.password)
-    setLoading(false)
-    if (result.error) {
-      setError(result.error)
-    } else {
-      router.push('/')
+    try {
+      const result = await register(form.email, form.name, form.password)
+      if (result.error) {
+        setError(result.error)
+      } else {
+        router.push('/')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
