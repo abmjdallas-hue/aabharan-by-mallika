@@ -2,40 +2,52 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 /**
  * Runs the real Stripe webhook handler against a simulated
- * `payment_intent.succeeded` event for a shipped order, with every outbound
- * dependency stubbed (Stripe signature check, Supabase, FedEx, Resend email).
+ * `payment_intent.succeeded` event, with every outbound dependency stubbed
+ * (Stripe signature check, Supabase, FedEx, Resend email).
  *
- * Regression guard for the bug fixed in bb64e06: the owner-notification email
- * must receive the FRESH FedEx label URL returned by createFedExShipment, not
- * the stale order.fedex_label_url field (which is null before the label is
- * created earlier in the same request).
+ * Covers both fulfillment paths:
+ *   - shipped order  -> FedEx label created, fresh labelUrl reaches owner email
+ *     (regression guard for bb64e06)
+ *   - pickup order   -> no FedEx call, owner email gets no label/tracking
  */
 
 const FRESH_LABEL_URL = 'https://fedex.example/label/TESTTRACK123.pdf'
 const STALE_LABEL_URL_IN_DB = null // order.fedex_label_url before the label exists
 
-// Spies created via vi.hoisted so the hoisted vi.mock factories can reference them.
-const { ownerSpy, customerSpy, fedexSpy, dbUpdates } = vi.hoisted(() => ({
+// Spies + a mutable order holder, created via vi.hoisted so the hoisted vi.mock
+// factories can reference them.
+const { ownerSpy, customerSpy, fedexSpy, dbUpdates, orderRef } = vi.hoisted(() => ({
   ownerSpy: vi.fn(async (_p: { labelUrl?: string; trackingNumber?: string }) => {}),
-  customerSpy: vi.fn(async (_p: Record<string, unknown>) => {}),
+  customerSpy: vi.fn(async (_p: { trackingNumber?: string }) => {}),
   fedexSpy: vi.fn(async () => ({
     trackingNumber: 'TESTTRACK123',
     labelUrl: 'https://fedex.example/label/TESTTRACK123.pdf',
   })),
   dbUpdates: [] as Array<Record<string, unknown>>,
+  orderRef: { current: null as Record<string, unknown> | null },
 }))
 
-const fakeOrder = {
+const baseOrder = {
   order_number: 'ABMTEST0001',
   customer_name: 'Test Customer',
   customer_email: 'customer@test.local',
   phone: '4695551234',
-  delivery_method: 'ship',
-  shipping_address: { address: '123 Test St', city: 'Dallas', state: 'Texas', zip: '75201' },
   selected_service: 'FEDEX_GROUND',
   items: [{ name: 'Silver Bangle', quantity: 1, price: 49 }],
   subtotal: 49, shipping_cost: 10, tax: 4, total: 63,
   fedex_label_url: STALE_LABEL_URL_IN_DB,
+}
+
+const shipOrder = {
+  ...baseOrder,
+  delivery_method: 'ship',
+  shipping_address: { address: '123 Test St', city: 'Dallas', state: 'Texas', zip: '75201' },
+}
+
+const pickupOrder = {
+  ...baseOrder,
+  delivery_method: 'pickup',
+  shipping_address: null,
 }
 
 // Stripe: skip signature verification, return our event.
@@ -50,11 +62,11 @@ vi.mock('stripe', () => ({
   },
 }))
 
-// Supabase: serve the fake order, record updates.
+// Supabase: serve whatever order the current test set, record updates.
 vi.mock('@/lib/supabase', () => ({
   supabaseAdmin: {
     from: () => ({
-      select: () => ({ eq: () => ({ single: async () => ({ data: fakeOrder, error: null }) }) }),
+      select: () => ({ eq: () => ({ single: async () => ({ data: orderRef.current, error: null }) }) }),
       update: (patch: Record<string, unknown>) => {
         dbUpdates.push(patch)
         return { eq: async () => ({ error: null }) }
@@ -82,7 +94,7 @@ function fakeRequest() {
   } as unknown as import('next/server').NextRequest
 }
 
-describe('Stripe webhook — shipped order label flow', () => {
+describe('Stripe webhook — payment_intent.succeeded', () => {
   beforeEach(() => {
     ownerSpy.mockClear()
     customerSpy.mockClear()
@@ -90,7 +102,8 @@ describe('Stripe webhook — shipped order label flow', () => {
     dbUpdates.length = 0
   })
 
-  it('passes the FRESH FedEx label URL to the owner email (regression: bb64e06)', async () => {
+  it('shipped order: passes the FRESH FedEx label URL to the owner email (regression: bb64e06)', async () => {
+    orderRef.current = { ...shipOrder }
     const { POST } = await import('@/app/api/webhooks/stripe/route')
     const res = await POST(fakeRequest())
 
@@ -110,5 +123,30 @@ describe('Stripe webhook — shipped order label flow', () => {
     const labelUpdate = dbUpdates.find((u) => 'fedex_label_url' in u)
     expect(labelUpdate?.fedex_label_url).toBe(FRESH_LABEL_URL)
     expect(labelUpdate?.status).toBe('label_created')
+  })
+
+  it('pickup order: skips FedEx and sends emails with no label or tracking', async () => {
+    orderRef.current = { ...pickupOrder }
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(fakeRequest())
+
+    expect(res.status).toBe(200)
+
+    // No shipment is created for pickup orders.
+    expect(fedexSpy).not.toHaveBeenCalled()
+
+    // Both emails still go out, with no label/tracking info.
+    expect(customerSpy).toHaveBeenCalledTimes(1)
+    expect(ownerSpy).toHaveBeenCalledTimes(1)
+
+    const ownerArg = ownerSpy.mock.calls[0][0]
+    expect(ownerArg.labelUrl).toBeUndefined()
+    expect(ownerArg.trackingNumber).toBeUndefined()
+    expect(customerSpy.mock.calls[0][0].trackingNumber).toBeUndefined()
+
+    // Order is marked paid, but never advances to a label/shipping status.
+    expect(dbUpdates.some((u) => u.status === 'paid')).toBe(true)
+    expect(dbUpdates.some((u) => 'fedex_label_url' in u)).toBe(false)
+    expect(dbUpdates.some((u) => u.status === 'label_created')).toBe(false)
   })
 })
