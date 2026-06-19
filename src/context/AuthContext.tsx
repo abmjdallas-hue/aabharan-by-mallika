@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { withTimeout } from '@/lib/with-timeout'
 
 export interface User {
   id: string
@@ -21,16 +22,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-// Reject if a network call hangs so the UI never spins forever waiting on Supabase.
-function withTimeout<T>(p: PromiseLike<T>, ms = 20000): Promise<T> {
-  return Promise.race([
-    p as Promise<T>,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), ms),
-    ),
-  ])
-}
 
 // ── localStorage fallback constants ───────────────────────────────────────────
 const USERS_KEY = 'aabharan-users'
