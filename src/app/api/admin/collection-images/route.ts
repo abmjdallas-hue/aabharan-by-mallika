@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
+import { requireAdmin } from '@/lib/admin-auth'
 
 // All collection photos, ordered. Each collection can have several.
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (!auth.ok) return auth.response
+
   const { data, error } = await supabaseAdmin
     .from('collection_gallery')
     .select('*')
@@ -15,6 +19,9 @@ export async function GET() {
 
 // Add a photo to a collection (appended after any existing photos).
 export async function POST(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (!auth.ok) return auth.response
+
   const { name, image_url } = await req.json()
   if (!name || !image_url)
     return NextResponse.json({ error: 'name and image_url are required' }, { status: 400 })
@@ -40,6 +47,9 @@ export async function POST(req: NextRequest) {
 
 // Remove a single photo by id.
 export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (!auth.ok) return auth.response
+
   const { id } = await req.json()
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { requireAdmin } from '@/lib/admin-auth'
 
-export async function GET() {
+export async function GET(req: Request) {
+  const auth = await requireAdmin(req)
+  if (!auth.ok) return auth.response
+
   const { data, error } = await supabaseAdmin
     .from('orders')
     .select('*')
@@ -12,6 +16,9 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+  const auth = await requireAdmin(req)
+  if (!auth.ok) return auth.response
+
   const { orderNumber, status } = await req.json()
   const { error } = await supabaseAdmin
     .from('orders')

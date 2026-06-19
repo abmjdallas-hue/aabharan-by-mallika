@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { Instagram, Upload, Link as LinkIcon, Loader2, CheckCircle, AlertCircle, X, Plus } from 'lucide-react'
+import { adminFetch } from '@/lib/admin-fetch'
 
 type Tab = 'instagram' | 'upload' | 'url'
 
@@ -27,7 +28,7 @@ export default function InstagramImporter({ onUseAsMain, onAddToGallery }: Props
     reset()
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/instagram-import', {
+      const res = await adminFetch('/api/admin/instagram-import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: igUrl.trim() }),
@@ -48,7 +49,7 @@ export default function InstagramImporter({ onUseAsMain, onAddToGallery }: Props
     try {
       const form = new FormData()
       form.append('file', file)
-      const res = await fetch('/api/admin/upload-image', { method: 'POST', body: form })
+      const res = await adminFetch('/api/admin/upload-image', { method: 'POST', body: form })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Upload failed')
       setResult(data.imageUrl)

@@ -1,9 +1,10 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { Product, Category, Collection, SilverSubcategory } from '@/types'
+import { Product } from '@/types'
 import { products as staticProducts } from '@/data/products'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { rowToProduct } from '@/lib/products-mapper'
 
 interface ProductsContextType {
   products: Product[]
@@ -18,53 +19,24 @@ const ProductsContext = createContext<ProductsContextType | undefined>(undefined
 
 const STORAGE_KEY = 'aabharan-products'
 
-// ── Supabase row → Product ────────────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToProduct(r: any): Product {
-  return {
-    id: r.id,
-    name: r.name,
-    slug: r.slug,
-    category: r.category as Category,
-    subcategory: r.subcategory as SilverSubcategory | undefined,
-    collection: r.collection as Collection,
-    price: r.price,
-    originalPrice: r.original_price ?? undefined,
-    image: r.image,
-    gallery: r.gallery ?? [],
-    description: r.description,
-    metalType: r.metal_type,
-    weight: r.weight,
-    purity: r.purity,
-    stockStatus: r.stock_status as Product['stockStatus'],
-    featured: r.featured,
-    sku: r.sku ?? undefined,
-    tags: r.tags ?? [],
+// Fetch wrapper that attaches the logged-in admin's Supabase access token so the
+// server-side route can verify the caller is an admin before writing.
+async function adminFetch(url: string, options: RequestInit = {}) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Request failed (${res.status})`)
   }
-}
-
-// ── Product → Supabase row ────────────────────────────────────────────────────
-function productToRow(p: Omit<Product, 'id'> & { id?: string }) {
-  return {
-    ...(p.id ? { id: p.id } : {}),
-    name: p.name,
-    slug: p.slug,
-    category: p.category,
-    subcategory: p.subcategory ?? null,
-    collection: p.collection,
-    price: p.price,
-    original_price: p.originalPrice ?? null,
-    image: p.image,
-    gallery: p.gallery,
-    description: p.description,
-    metal_type: p.metalType,
-    weight: p.weight,
-    purity: p.purity,
-    stock_status: p.stockStatus,
-    featured: p.featured,
-    sku: p.sku ?? null,
-    tags: p.tags ?? [],
-  }
+  return res
 }
 
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
@@ -109,17 +81,17 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
 
   // ── addProduct ────────────────────────────────────────────────────────────
   const addProduct = async (data: Omit<Product, 'id'>): Promise<Product> => {
+    // products.id is a NOT NULL text column with no default, so we generate the
+    // `p_<timestamp>` id ourselves.
     const id = `p_${Date.now()}`
     const newProduct: Product = { ...data, id }
 
     if (isSupabaseConfigured) {
-      const { data: row, error } = await supabase
-        .from('products')
-        .insert(productToRow({ ...data, id }))
-        .select()
-        .single()
-      if (error) throw new Error(error.message)
-      const saved = rowToProduct(row)
+      const res = await adminFetch('/api/admin/products', {
+        method: 'POST',
+        body: JSON.stringify(newProduct),
+      })
+      const saved: Product = await res.json()
       setProducts((prev) => [saved, ...prev])
       return saved
     }
@@ -131,27 +103,10 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   // ── updateProduct ─────────────────────────────────────────────────────────
   const updateProduct = async (id: string, updates: Partial<Product>): Promise<void> => {
     if (isSupabaseConfigured) {
-      const row: Record<string, unknown> = {}
-      if (updates.name !== undefined) row.name = updates.name
-      if (updates.slug !== undefined) row.slug = updates.slug
-      if (updates.category !== undefined) row.category = updates.category
-      if (updates.subcategory !== undefined) row.subcategory = updates.subcategory ?? null
-      if (updates.collection !== undefined) row.collection = updates.collection
-      if (updates.price !== undefined) row.price = updates.price
-      if (updates.originalPrice !== undefined) row.original_price = updates.originalPrice ?? null
-      if (updates.image !== undefined) row.image = updates.image
-      if (updates.gallery !== undefined) row.gallery = updates.gallery
-      if (updates.description !== undefined) row.description = updates.description
-      if (updates.metalType !== undefined) row.metal_type = updates.metalType
-      if (updates.weight !== undefined) row.weight = updates.weight
-      if (updates.purity !== undefined) row.purity = updates.purity
-      if (updates.stockStatus !== undefined) row.stock_status = updates.stockStatus
-      if (updates.featured !== undefined) row.featured = updates.featured
-      if (updates.sku !== undefined) row.sku = updates.sku ?? null
-      if (updates.tags !== undefined) row.tags = updates.tags
-
-      const { error } = await supabase.from('products').update(row).eq('id', id)
-      if (error) throw new Error(error.message)
+      await adminFetch(`/api/admin/products/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+      })
     }
 
     setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)))
@@ -160,8 +115,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   // ── deleteProduct ─────────────────────────────────────────────────────────
   const deleteProduct = async (id: string): Promise<void> => {
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('products').delete().eq('id', id)
-      if (error) throw new Error(error.message)
+      await adminFetch(`/api/admin/products/${id}`, { method: 'DELETE' })
     }
     setProducts((prev) => prev.filter((p) => p.id !== id))
   }

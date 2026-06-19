@@ -69,29 +69,34 @@ export default function NewProductPage() {
       ? form.gallery.split('\n').map((u) => u.trim()).filter(Boolean)
       : [form.image]
 
-    await addProduct({
-      name: form.name,
-      slug: form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      category: form.category as Category,
-      subcategory: form.category === 'Silver Articles' && form.subcategory ? form.subcategory as SilverSubcategory : undefined,
-      collection: form.collection as Collection,
-      price: Number(form.price),
-      originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
-      image: form.image,
-      gallery: galleryArr,
-      description: form.description,
-      metalType: form.metalType,
-      weight: form.weight,
-      purity: form.purity,
-      stockStatus: form.stockStatus,
-      featured: form.featured,
-      sku: form.sku || undefined,
-      tags: [],
-    })
+    try {
+      await addProduct({
+        name: form.name,
+        slug: form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        category: form.category as Category,
+        subcategory: form.category === 'Silver Articles' && form.subcategory ? form.subcategory as SilverSubcategory : undefined,
+        collection: form.collection as Collection,
+        price: Number(form.price),
+        originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
+        image: form.image,
+        gallery: galleryArr,
+        description: form.description,
+        metalType: form.metalType,
+        weight: form.weight,
+        purity: form.purity,
+        stockStatus: form.stockStatus,
+        featured: form.featured,
+        sku: form.sku || undefined,
+        tags: [],
+      })
 
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => router.push('/admin/products'), 1200)
+      setSaved(true)
+      setTimeout(() => router.push('/admin/products'), 1200)
+    } catch (err) {
+      setErrors({ submit: err instanceof Error ? err.message : 'Failed to save product. Please try again.' })
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (saved) {
@@ -303,6 +308,12 @@ export default function NewProductPage() {
                 className="input-field resize-none text-xs" />
             </div>
           </section>
+
+          {errors.submit && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+              {errors.submit}
+            </p>
+          )}
 
           <div className="flex gap-4">
             <Link href="/admin/products"

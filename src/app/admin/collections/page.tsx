@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Store, Upload, Loader2, AlertCircle, X, ImageIcon } from 'lucide-react'
 import { collections } from '@/data/products'
 import { compressImage } from '@/lib/compress-image'
+import { adminFetch } from '@/lib/admin-fetch'
 
 interface CollectionImage {
   id: string
@@ -22,7 +23,7 @@ export default function AdminCollectionsPage() {
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   useEffect(() => {
-    fetch('/api/admin/collection-images')
+    adminFetch('/api/admin/collection-images')
       .then(r => r.json())
       .then((data: CollectionImage[]) => {
         const map: Record<string, CollectionImage[]> = {}
@@ -40,11 +41,11 @@ export default function AdminCollectionsPage() {
         const compressed = await compressImage(file)
         const form = new FormData()
         form.append('file', compressed)
-        const uploadRes = await fetch('/api/admin/upload-image', { method: 'POST', body: form })
+        const uploadRes = await adminFetch('/api/admin/upload-image', { method: 'POST', body: form })
         const uploadData = await uploadRes.json()
         if (!uploadRes.ok || !uploadData.imageUrl) throw new Error(uploadData.error ?? 'Upload failed')
 
-        const saveRes = await fetch('/api/admin/collection-images', {
+        const saveRes = await adminFetch('/api/admin/collection-images', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: colName, image_url: uploadData.imageUrl }),
@@ -65,7 +66,7 @@ export default function AdminCollectionsPage() {
     setError(null)
     // optimistic removal
     setImages(prev => ({ ...prev, [colName]: (prev[colName] ?? []).filter(i => i.id !== id) }))
-    const res = await fetch('/api/admin/collection-images', {
+    const res = await adminFetch('/api/admin/collection-images', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),

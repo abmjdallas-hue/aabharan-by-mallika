@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { requireAdmin } from '@/lib/admin-auth'
 
 const BUCKET = 'product-images'
 
@@ -11,6 +12,9 @@ async function ensureBucket() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdmin(req)
+  if (!auth.ok) return auth.response
+
   const { url } = await req.json() as { url: string }
   if (!url) return NextResponse.json({ error: 'URL required' }, { status: 400 })
 

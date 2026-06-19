@@ -26,6 +26,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const [form, setForm] = useState(() => ({
     name: product?.name ?? '',
@@ -62,34 +63,40 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError('')
     setSaving(true)
 
     const galleryArr = form.gallery
       ? form.gallery.split('\n').map((u) => u.trim()).filter(Boolean)
       : [form.image]
 
-    await updateProduct(id, {
-      name: form.name,
-      slug: form.slug,
-      category: form.category as Category,
-      subcategory: form.category === 'Silver Articles' && form.subcategory ? form.subcategory as SilverSubcategory : undefined,
-      collection: form.collection as Collection,
-      price: Number(form.price),
-      originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
-      image: form.image,
-      gallery: galleryArr,
-      description: form.description,
-      metalType: form.metalType,
-      weight: form.weight,
-      purity: form.purity,
-      stockStatus: form.stockStatus,
-      featured: form.featured,
-      sku: form.sku || undefined,
-    })
+    try {
+      await updateProduct(id, {
+        name: form.name,
+        slug: form.slug,
+        category: form.category as Category,
+        subcategory: form.category === 'Silver Articles' && form.subcategory ? form.subcategory as SilverSubcategory : undefined,
+        collection: form.collection as Collection,
+        price: Number(form.price),
+        originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
+        image: form.image,
+        gallery: galleryArr,
+        description: form.description,
+        metalType: form.metalType,
+        weight: form.weight,
+        purity: form.purity,
+        stockStatus: form.stockStatus,
+        featured: form.featured,
+        sku: form.sku || undefined,
+      })
 
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => router.push('/admin/products'), 1200)
+      setSaved(true)
+      setTimeout(() => router.push('/admin/products'), 1200)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to save changes. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (saved) {
@@ -264,6 +271,12 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 rows={3} className="input-field resize-none text-xs" />
             </div>
           </section>
+
+          {submitError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+              {submitError}
+            </p>
+          )}
 
           <div className="flex gap-4">
             <Link href="/admin/products"

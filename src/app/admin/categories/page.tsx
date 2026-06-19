@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Store, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { categories } from '@/data/products'
 import { compressImage } from '@/lib/compress-image'
+import { adminFetch } from '@/lib/admin-fetch'
 
 interface CategoryImage {
   name: string
@@ -20,7 +21,7 @@ export default function AdminCategoriesPage() {
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   useEffect(() => {
-    fetch('/api/admin/categories')
+    adminFetch('/api/admin/categories')
       .then(r => r.json())
       .then((data: CategoryImage[]) => {
         const map: Record<string, string> = {}
@@ -38,11 +39,11 @@ export default function AdminCategoriesPage() {
       const compressed = await compressImage(file)
       const form = new FormData()
       form.append('file', compressed)
-      const uploadRes = await fetch('/api/admin/upload-image', { method: 'POST', body: form })
+      const uploadRes = await adminFetch('/api/admin/upload-image', { method: 'POST', body: form })
       const uploadData = await uploadRes.json()
       if (!uploadRes.ok || !uploadData.imageUrl) throw new Error(uploadData.error ?? 'Upload failed')
 
-      const saveRes = await fetch('/api/admin/categories', {
+      const saveRes = await adminFetch('/api/admin/categories', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: catName, image_url: uploadData.imageUrl }),

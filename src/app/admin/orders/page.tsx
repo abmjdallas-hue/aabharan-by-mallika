@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Store, Package, ExternalLink, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
+import { adminFetch } from '@/lib/admin-fetch'
 
 interface Order {
   id: string
@@ -46,7 +47,7 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = async () => {
     setLoading(true)
-    const res = await fetch('/api/admin/orders')
+    const res = await adminFetch('/api/admin/orders')
     const data = await res.json()
     setOrders(Array.isArray(data) ? data : [])
     setLoading(false)
@@ -55,7 +56,7 @@ export default function AdminOrdersPage() {
   useEffect(() => { fetchOrders() }, [])
 
   const markShipped = async (orderNumber: string) => {
-    await fetch('/api/admin/orders', {
+    await adminFetch('/api/admin/orders', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderNumber, status: 'shipped' }),
