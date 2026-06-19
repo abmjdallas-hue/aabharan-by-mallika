@@ -149,4 +149,32 @@ describe('Stripe webhook — payment_intent.succeeded', () => {
     expect(dbUpdates.some((u) => 'fedex_label_url' in u)).toBe(false)
     expect(dbUpdates.some((u) => u.status === 'label_created')).toBe(false)
   })
+
+  it('shipped order with FedEx failure: marks order paid_label_failed and still emails', async () => {
+    orderRef.current = { ...shipOrder }
+    fedexSpy.mockRejectedValueOnce(new Error('FedEx ship failed 500'))
+    // The handler logs the FedEx error; silence it to keep test output clean.
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(fakeRequest())
+
+    expect(res.status).toBe(200)
+    expect(fedexSpy).toHaveBeenCalledTimes(1)
+
+    // Order is flagged as paid-but-label-failed; no label/tracking ever recorded.
+    expect(dbUpdates.some((u) => u.status === 'paid_label_failed')).toBe(true)
+    expect(dbUpdates.some((u) => u.status === 'label_created')).toBe(false)
+    expect(dbUpdates.some((u) => 'fedex_label_url' in u)).toBe(false)
+
+    // Emails still go out so the customer/owner aren't left in the dark.
+    expect(customerSpy).toHaveBeenCalledTimes(1)
+    expect(ownerSpy).toHaveBeenCalledTimes(1)
+
+    const ownerArg = ownerSpy.mock.calls[0][0]
+    expect(ownerArg.labelUrl).toBeUndefined()
+    expect(ownerArg.trackingNumber).toBeUndefined()
+
+    errSpy.mockRestore()
+  })
 })
