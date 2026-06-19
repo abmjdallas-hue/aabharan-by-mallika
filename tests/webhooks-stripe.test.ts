@@ -16,7 +16,7 @@ const STALE_LABEL_URL_IN_DB = null // order.fedex_label_url before the label exi
 
 // Spies + a mutable order holder, created via vi.hoisted so the hoisted vi.mock
 // factories can reference them.
-const { ownerSpy, customerSpy, fedexSpy, dbUpdates, orderRef } = vi.hoisted(() => ({
+const { ownerSpy, customerSpy, fedexSpy, dbUpdates, orderRef, metadataRef } = vi.hoisted(() => ({
   ownerSpy: vi.fn(async (_p: { labelUrl?: string; trackingNumber?: string }) => {}),
   customerSpy: vi.fn(async (_p: { trackingNumber?: string }) => {}),
   fedexSpy: vi.fn(async () => ({
@@ -25,7 +25,10 @@ const { ownerSpy, customerSpy, fedexSpy, dbUpdates, orderRef } = vi.hoisted(() =
   })),
   dbUpdates: [] as Array<Record<string, unknown>>,
   orderRef: { current: null as Record<string, unknown> | null },
+  metadataRef: { current: { order_number: 'ABMTEST0001' } as Record<string, string> },
 }))
+
+const DEFAULT_METADATA = { order_number: 'ABMTEST0001' }
 
 const baseOrder = {
   order_number: 'ABMTEST0001',
@@ -56,7 +59,7 @@ vi.mock('stripe', () => ({
     webhooks = {
       constructEvent: () => ({
         type: 'payment_intent.succeeded',
-        data: { object: { id: 'pi_test_123', metadata: { order_number: 'ABMTEST0001' } } },
+        data: { object: { id: 'pi_test_123', metadata: metadataRef.current } },
       }),
     }
   },
@@ -100,6 +103,7 @@ describe('Stripe webhook — payment_intent.succeeded', () => {
     customerSpy.mockClear()
     fedexSpy.mockClear()
     dbUpdates.length = 0
+    metadataRef.current = { ...DEFAULT_METADATA }
   })
 
   it('shipped order: passes the FRESH FedEx label URL to the owner email (regression: bb64e06)', async () => {
@@ -174,6 +178,25 @@ describe('Stripe webhook — payment_intent.succeeded', () => {
     const ownerArg = ownerSpy.mock.calls[0][0]
     expect(ownerArg.labelUrl).toBeUndefined()
     expect(ownerArg.trackingNumber).toBeUndefined()
+
+    errSpy.mockRestore()
+  })
+
+  it('missing order_number in PI metadata: acks the event and does nothing', async () => {
+    // PaymentIntent has no order_number (e.g. an event from outside checkout).
+    metadataRef.current = {}
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { POST } = await import('@/app/api/webhooks/stripe/route')
+    const res = await POST(fakeRequest())
+
+    // Still 200 so Stripe doesn't retry, but no side effects whatsoever.
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toEqual({ received: true })
+    expect(dbUpdates).toHaveLength(0)
+    expect(fedexSpy).not.toHaveBeenCalled()
+    expect(customerSpy).not.toHaveBeenCalled()
+    expect(ownerSpy).not.toHaveBeenCalled()
 
     errSpy.mockRestore()
   })
