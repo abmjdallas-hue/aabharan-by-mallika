@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { withTimeout } from '@/lib/with-timeout'
 
@@ -57,22 +58,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // ── Supabase mode ────────────────────────────────────────────────────────
-    withTimeout(supabase.auth.getSession())
-      .then(async ({ data: { session } }) => {
-        if (session?.user) await fetchProfile(session.user.id, session.user.email!)
-      })
-      .catch((err) => console.error('[auth] getSession failed', err))
-      .finally(() => setLoading(false)) // always resolve loading so gated screens never hang
+    let active = true
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        await fetchProfile(session.user.id, session.user.email!)
-      } else {
-        setUser(null)
+    // Resolve a session into a user (including the admin flag) and only THEN clear
+    // loading, so route guards never evaluate a half-loaded auth state. Without
+    // this, a fresh sign-in redirects to /admin before isAdmin is known and the
+    // guard bounces the user back to /login.
+    const resolveSession = async (session: Session | null) => {
+      try {
+        if (session?.user) {
+          await fetchProfile(session.user.id, session.user.email!)
+        } else {
+          setUser(null)
+        }
+      } finally {
+        if (active) setLoading(false)
       }
+    }
+
+    withTimeout(supabase.auth.getSession())
+      .then(({ data: { session } }) => resolveSession(session))
+      .catch((err) => { console.error('[auth] getSession failed', err); if (active) setLoading(false) })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // On sign-in the profile/isAdmin isn't loaded yet — re-gate as loading so admin
+      // guards wait instead of redirecting before isAdmin is resolved. (Token refreshes
+      // keep the existing user, so don't flash loading for those.)
+      if (event === 'SIGNED_IN' && session?.user) setLoading(true)
+      resolveSession(session)
     })
 
-    return () => subscription.unsubscribe()
+    return () => { active = false; subscription.unsubscribe() }
   }, [])
 
   const fetchProfile = async (id: string, email: string) => {
@@ -87,9 +103,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAdmin: data?.is_admin ?? false,
       })
     } catch (err) {
-      // Profile lookup failed/timed out — fall back to a basic user so the app stays usable.
+      // Transient profile-fetch failure: keep any already-resolved user rather than
+      // downgrading to non-admin (which would bounce an admin mid-session).
       console.error('[auth] fetchProfile failed', err)
-      setUser({ id, email, name: email.split('@')[0], isAdmin: false })
+      setUser((prev) => prev ?? { id, email, name: email.split('@')[0], isAdmin: false })
     }
   }
 
